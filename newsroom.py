@@ -23,8 +23,19 @@ def get_json(url):
         return json.load(r)
 
 def fix_images(cooked):
-    # Bypass hotlink protection: send no Referer header for every image
-    return re.sub(r"(<img\b)", r'\1 referrerpolicy="no-referrer"', cooked)
+    # 1) Discard Discourse's lightbox wrapper + meta row (filename, size, icon),
+    #    keeping only the plain <img> so no empty space or meta text remains
+    cooked = re.sub(
+        r'<div class="lightbox-wrapper">\s*<a class="lightbox"[^>]*>\s*'
+        r'(<img[^>]*>)\s*'
+        r'<div class="meta">.*?</div>\s*</a>\s*</div>',
+        r"\1",
+        cooked,
+        flags=re.DOTALL,
+    )
+    # 2) Bypass hotlink protection: no Referer header for remaining images
+    cooked = re.sub(r"(<img\b)", r'\1 referrerpolicy="no-referrer"', cooked)
+    return cooked
 
 def fetch_stories():
     # 1) Find the 25 newest replies + snapshot of the topics they belong to
@@ -105,6 +116,7 @@ def build_html(items):
            ".body pre{background:#f4f4f4;padding:1em;overflow:auto;border-radius:4px}"
            ".body blockquote{border-left:4px solid #ddd;margin:1em 0;padding:0 1em;color:#555}"
            ".body code{background:#eee;padding:.1em .3em;border-radius:3px}"
+           ".body .lightbox-wrapper .meta{display:none!important}"
            ".read{display:inline-block;margin-top:1em;color:#08c}")
     return (f"<!doctype html><meta charset='utf-8'>"
             f"<meta name='referrer' content='no-referrer'>"  # global no-referrer -> images load
