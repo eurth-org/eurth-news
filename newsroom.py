@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rolling news feed: newest 25 stories (replies) in The Newsroom, category 36, on eurth.org."""
-import json, os, time, datetime
+import json, os, re, time, datetime
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 from xml.sax.saxutils import escape
@@ -22,25 +22,43 @@ def get_json(url):
     with urlopen(req, timeout=30) as r:
         return json.load(r)
 
+def fix_images(cooked):
+    # Bypass hotlink protection: send no Referer header for every image
+    return re.sub(r"(<img\b)", r'\1 referrerpolicy="no-referrer"', cooked)
+
 def fetch_stories():
-    # 1) Find the 25 newest replies in the category (gives metadata)
+    # 1) Find the 25 newest replies + snapshot of the topics they belong to
     q = quote(f"category:{CATEGORY} in:replies order:latest")
-    hits = get_json(f"{SITE}/search.json?q={q}").get("posts", [])[:LIMIT]
+    data = get_json(f"{SITE}/search.json?q={q}")
+    hits = data.get("posts", [])[:LIMIT]
+
+    # topic_id -> title map straight from the search response
+    titles = {t["id"]: t.get("title") for t in data.get("topics", [])}
 
     stories = []
     for p in hits:
-        # 2) Fetch the FULL post body — search results only carry a snippet
-        detail = {}
+        tid = p.get("topic_id", 0)
+
+        # 2) Full post body + topic slug
         try:
             detail = get_json(f"{SITE}/posts/{p['id']}.json")
         except Exception:
-            pass
+            detail = {}
+
+        agency = (
+            titles.get(tid)
+            or detail.get("topic_title")
+            or p.get("topic_title")
+            or (p.get("topic_slug") or "").replace("-", " ").title()
+            or "News"
+        )
+
         stories.append({
-            "agency": p.get("topic_title") or "News",
+            "agency": agency,
             "author": detail.get("username") or p.get("username", ""),
             "date":   detail.get("created_at") or p.get("created_at", ""),
-            "cooked": detail.get("cooked") or p.get("cooked") or "",
-            "url":    f"{SITE}/t/{p.get('topic_slug')}/{p['topic_id']}/{p.get('post_number')}",
+            "cooked": fix_images(detail.get("cooked") or p.get("cooked") or ""),
+            "url":    f"{SITE}/t/{p.get('topic_slug')}/{tid}/{p.get('post_number')}",
         })
         time.sleep(0.3)   # be polite to eurth.org's API
     return stories
@@ -88,7 +106,9 @@ def build_html(items):
            ".body blockquote{border-left:4px solid #ddd;margin:1em 0;padding:0 1em;color:#555}"
            ".body code{background:#eee;padding:.1em .3em;border-radius:3px}"
            ".read{display:inline-block;margin-top:1em;color:#08c}")
-    return (f"<!doctype html><meta charset='utf-8'><title>The Newsroom - Live</title>"
+    return (f"<!doctype html><meta charset='utf-8'>"
+            f"<meta name='referrer' content='no-referrer'>"  # global no-referrer -> images load
+            f"<title>The Newsroom - Live</title>"
             f"<style>{css}</style><h1>The Newsroom &mdash; live feed</h1>"
             f"<p>Newest {LIMIT} stories, updated every 5 minutes.</p>"
             f"{''.join(cards)}")
