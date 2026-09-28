@@ -37,6 +37,23 @@ def fix_images(cooked):
     cooked = re.sub(r"(<img\b)", r'\1 referrerpolicy="no-referrer"', cooked)
     return cooked
 
+def fix_urls(cooked):
+    # Discourse emits internal links as relative ("/u/orioni", "/t/...", "/c/...");
+    # make them absolute so they work when served from GitHub Pages.
+    SITE_URL = SITE  # "https://eurth.org"
+
+    def repl(m):
+        attr, quote, url = m.group(1), m.group(2), m.group(3)
+        # Skip anything already absolute, protocol-relative, or non-http
+        if url.startswith(("http:", "https:", "//", "mailto:", "tel:", "javascript:", "data:", "#")):
+            return m.group(0)
+        # Only rewrite real relative paths (e.g. "/u/orioni")
+        if url.startswith("/"):
+            return f'{attr}={quote}{SITE_URL}{url}{quote}'
+        return m.group(0)
+
+    return re.sub(r'\b(href|src)=(["\'])([^"\']*)\2', repl, cooked)
+
 def fetch_stories():
     # 1) Find the 25 newest replies + snapshot of the topics they belong to
     q = quote(f"category:{CATEGORY} in:replies order:latest")
@@ -68,7 +85,7 @@ def fetch_stories():
             "agency": agency,
             "author": detail.get("username") or p.get("username", ""),
             "date":   detail.get("created_at") or p.get("created_at", ""),
-            "cooked": fix_images(detail.get("cooked") or p.get("cooked") or ""),
+            "cooked": fix_urls(fix_images(detail.get("cooked") or p.get("cooked") or "")),
             "url":    f"{SITE}/t/{p.get('topic_slug')}/{tid}/{p.get('post_number')}",
         })
         time.sleep(0.3)   # be polite to eurth.org's API
