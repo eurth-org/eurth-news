@@ -13,6 +13,7 @@ OUTDIR = "_site"
 API_KEY = os.environ.get("DISCOURSE_API_KEY", "")
 API_USER = os.environ.get("DISCOURSE_API_USERNAME", "system")
 
+
 def get_json(url):
     headers = {"User-Agent": "Eurth-Newsroom-Feed/1.0", "Accept": "application/json"}
     if API_KEY:
@@ -22,9 +23,9 @@ def get_json(url):
     with urlopen(req, timeout=30) as r:
         return json.load(r)
 
+
 def fix_images(cooked):
-    # 1) Discard Discourse's lightbox wrapper + meta row (filename, size, icon),
-    #    keeping only the plain <img> so no empty space or meta text remains
+    """Strip Discourse's lightbox wrapper+meta row, keep bare <img>, no hotlink Referer."""
     cooked = re.sub(
         r'<div class="lightbox-wrapper">\s*<a class="lightbox"[^>]*>\s*'
         r'(<img[^>]*>)\s*'
@@ -33,34 +34,28 @@ def fix_images(cooked):
         cooked,
         flags=re.DOTALL,
     )
-    # 2) Bypass hotlink protection: no Referer header for remaining images
     cooked = re.sub(r"(<img\b)", r'\1 referrerpolicy="no-referrer"', cooked)
     return cooked
 
-def fix_urls(cooked):
-    # Discourse emits internal links as relative ("/u/orioni", "/t/...", "/c/...");
-    # make them absolute so they work when served from GitHub Pages.
-    SITE_URL = SITE  # "https://eurth.org"
 
+def fix_urls(cooked):
+    """Make Discourse's relative /u/, /t/, /c/, /uploads/ URLs absolute (eurth.org)."""
     def repl(m):
-        attr, quote, url = m.group(1), m.group(2), m.group(3)
-        # Skip anything already absolute, protocol-relative, or non-http
+        attr, q, url = m.group(1), m.group(2), m.group(3)
         if url.startswith(("http:", "https:", "//", "mailto:", "tel:", "javascript:", "data:", "#")):
             return m.group(0)
-        # Only rewrite real relative paths (e.g. "/u/orioni")
         if url.startswith("/"):
-            return f'{attr}={quote}{SITE_URL}{url}{quote}'
+            return f"{attr}={q}{SITE}{url}{q}"
         return m.group(0)
 
     return re.sub(r'\b(href|src)=(["\'])([^"\']*)\2', repl, cooked)
 
+
 def fetch_stories():
-    # 1) Find the 25 newest replies + snapshot of the topics they belong to
+    # 1) 25 newest replies in the category + topic-title map from the same response
     q = quote(f"category:{CATEGORY} in:replies order:latest")
     data = get_json(f"{SITE}/search.json?q={q}")
     hits = data.get("posts", [])[:LIMIT]
-
-    # topic_id -> title map straight from the search response
     titles = {t["id"]: t.get("title") for t in data.get("topics", [])}
 
     stories = []
@@ -81,25 +76,37 @@ def fetch_stories():
             or "News"
         )
 
+        cooked = fix_urls(fix_images(detail.get("cooked") or p.get("cooked") or ""))
+
         stories.append({
             "agency": agency,
             "author": detail.get("username") or p.get("username", ""),
             "date":   detail.get("created_at") or p.get("created_at", ""),
-            "cooked": fix_urls(fix_images(detail.get("cooked") or p.get("cooked") or "")),
+            "cooked": cooked,
             "url":    f"{SITE}/t/{p.get('topic_slug')}/{tid}/{p.get('post_number')}",
         })
         time.sleep(0.3)   # be polite to eurth.org's API
     return stories
 
+
+def fmt_date(iso):
+    try:
+        dt = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        return dt.strftime("%d %B %Y")
+    except Exception:
+        return iso
+
+
 def rss_date(iso):
     dt = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
     return dt.astimezone(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
+
 def build_rss(items):
     lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0"><channel>']
-    lines.append("<title>Eurth — The Newsroom</title>")
+    lines.append("<title>Eurth News Network — Yesterday's News Today</title>")
     lines.append(f"<link>{SITE}/c/affairs/the-newsroom/36</link>")
-    lines.append("<description>25 newest news stories in The Newsroom</description>")
+    lines.append("<description>Rolling feed of the 25 newest news stories in The Newsroom</description>")
     for s in items:
         lines += [
             "<item>",
@@ -114,12 +121,6 @@ def build_rss(items):
     lines += ["</channel></rss>"]
     return "\n".join(lines)
 
-def fmt_date(iso):
-    try:
-        dt = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
-        return dt.strftime("%d %B %Y")
-    except Exception:
-        return iso
 
 def build_html(items):
     cards = []
@@ -132,13 +133,11 @@ def build_html(items):
             f'<a class="read" href="{escape(s["url"])}">Read the full post &rarr;</a>'
             f'</article>'
         )
-    last = None
-    if items:
-        last = fmt_date(items[0]["date"])
+    last = fmt_date(items[0]["date"]) if items else ""
+
     css = (
         "body{font-family:'Times New Roman',Georgia,serif;max-width:860px;margin:auto;"
         "padding:0;background:#fff;color:#1a1a1a}"
-        /* Newspaper masthead */
         ".masthead{text-align:center;border-bottom:4px double #1a1a1a;padding:1.4em 1em .8em;margin-bottom:1.2em}"
         ".masthead h1{font-size:3em;margin:0;font-weight:700;letter-spacing:.02em;text-transform:uppercase}"
         ".masthead .tagline{font-style:italic;color:#555;margin:.3em 0 0;font-size:1.05em}"
@@ -151,15 +150,15 @@ def build_html(items):
         ".byline{color:#666;font-size:.9em;font-style:italic;margin-bottom:.8em}"
         ".body{font-size:1.02em;line-height:1.6}"
         ".body img{max-width:100%;height:auto}"
-        ".body pre{background:#f5f5f5;padding:.8em;overflow:auto}"
+        ".body pre{background:#f5f5f5;padding:.8em;overflow:auto;border-radius:3px}"
         ".body blockquote{border-left:3px solid #b00;margin:.8em 0;padding:0 .9em;color:#444}"
-        ".body code{background:#f2f2f2;padding:.1em .3em}"
-        ".body .lightbox-wrapper .meta{display:none!important}"
+        ".body code{background:#f2f2f2;padding:.1em .3em;border-radius:3px}"
         ".read{display:inline-block;margin-top:.9em;color:#08c;font-family:system-ui,sans-serif;"
         "font-weight:600;text-transform:uppercase;font-size:.8em;letter-spacing:.05em}"
         ".sitefoot{text-align:center;color:#888;font-size:.85em;padding:1.4em 0 2em;font-family:system-ui,sans-serif}"
         ".sitefoot a{color:#b00}"
     )
+
     return (
         f"<!doctype html><meta charset='utf-8'>"
         f"<meta name='referrer' content='no-referrer'>"
@@ -168,7 +167,7 @@ def build_html(items):
         f"<header class='masthead'>"
         f"  <h1>Eurth News Network</h1>"
         f"  <p class='tagline'>Yesterday's News Today</p>"
-        f"  <p class='dateline'>LATEST STORIES &middot; UPDATED {escape(last or '')}</p>"
+        f"  <p class='dateline'>LATEST STORIES &middot; UPDATED {escape(last)}</p>"
         f"</header>"
         f"<div class='wrap'>{''.join(cards)}"
         f"  <footer class='sitefoot'>"
@@ -176,6 +175,7 @@ def build_html(items):
         f"  </footer>"
         f"</div>"
     )
+
 
 if __name__ == "__main__":
     os.makedirs(OUTDIR, exist_ok=True)
