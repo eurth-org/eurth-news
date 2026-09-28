@@ -130,38 +130,70 @@ def build_html(items):
             f'<div class="kicker">{escape(s["agency"])}</div>'
             f'<div class="byline">By <strong>{escape(s["author"])}</strong> &middot; {escape(fmt_date(s["date"]))}</div>'
             f'<div class="body">{s["cooked"]}</div>'
-            f'<a class="read" href="{escape(s["url"])}">Read the full post &rarr;</a>'
+            f'<button class="toggle" type="button">Read full story</button>'
+            f'<a class="read" href="{escape(s["url"])}">Open the exact post &rarr;</a>'
             f'</article>'
         )
     last = fmt_date(items[0]["date"]) if items else ""
 
     css = (
-        "body{font-family:'Times New Roman',Georgia,serif;max-width:860px;margin:auto;"
-        "padding:0;background:#fff;color:#1a1a1a}"
-        ".masthead{text-align:center;border-bottom:4px double #1a1a1a;padding:1.4em 1em .8em;margin-bottom:1.2em}"
+        /* base */
+        "body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;"
+        "max-width:1100px;margin:auto;padding:0 1em;background:#f4f4f4;color:#222}"
+        /* masthead — Georgia headers */
+        ".masthead{font-family:Georgia,'Times New Roman',serif;text-align:center;"
+        "border-bottom:4px double #222;background:#fff;padding:1.6em 1em .9em;margin-bottom:1.4em}"
         ".masthead h1{font-size:3em;margin:0;font-weight:700;letter-spacing:.02em;text-transform:uppercase}"
-        ".masthead .tagline{font-style:italic;color:#555;margin:.3em 0 0;font-size:1.05em}"
-        ".masthead .dateline{color:#777;font-size:.85em;margin-top:.6em;letter-spacing:.05em}"
-        ".wrap{padding:0 1.4em}"
-        ".story{padding:1em 0 1.2em;border-bottom:1px solid #ddd}"
-        ".story:last-child{border-bottom:none;padding-bottom:0}"
-        ".kicker{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.85em;"
-        "color:#b00;margin-bottom:.3em}"
-        ".byline{color:#666;font-size:.9em;font-style:italic;margin-bottom:.8em}"
-        ".body{font-size:1.02em;line-height:1.6}"
-        ".body img{max-width:100%;height:auto}"
-        ".body pre{background:#f5f5f5;padding:.8em;overflow:auto;border-radius:3px}"
-        ".body blockquote{border-left:3px solid #b00;margin:.8em 0;padding:0 .9em;color:#444}"
-        ".body code{background:#f2f2f2;padding:.1em .3em;border-radius:3px}"
-        ".read{display:inline-block;margin-top:.9em;color:#08c;font-family:system-ui,sans-serif;"
-        "font-weight:600;text-transform:uppercase;font-size:.8em;letter-spacing:.05em}"
-        ".sitefoot{text-align:center;color:#888;font-size:.85em;padding:1.4em 0 2em;font-family:system-ui,sans-serif}"
+        ".masthead .tagline{font-style:italic;color:#555;margin:.3em 0 0;font-size:1.1em}"
+        ".masthead .dateline{color:#777;font-size:.8em;margin-top:.7em;letter-spacing:.06em;"
+        "font-family:system-ui,sans-serif}"
+        /* masonry grid */
+        ".masonry{columns:2 340px;column-gap:1.4em}"
+        ".wrap{padding:0 0 1.5em}"
+        /* story cards */
+        ".story{break-inside:avoid;margin:0 0 1.4em;background:#fff;border:1px solid #e5e5e5;"
+        "border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.10);padding:1.1em 1.2em}"
+        ".kicker{font-family:Georgia,serif;font-weight:700;text-transform:uppercase;"
+        "letter-spacing:.07em;font-size:.95em;color:#b00;margin-bottom:.35em}"
+        ".byline{color:#666;font-size:.85em;font-style:italic;margin-bottom:.7em}"
+        /* body: sans-serif, clamped to ~6 lines until expanded */
+        ".body{font-size:1em;line-height:1.55;display:-webkit-box;-webkit-line-clamp:6;"
+        "-webkit-box-orient:vertical;overflow:hidden}"
+        ".story.expanded .body{-webkit-line-clamp:unset;overflow:visible}"
+        ".body img{max-width:100%;height:auto;border-radius:6px}"
+        ".body pre{background:#f5f5f5;padding:.8em;overflow:auto;border-radius:4px}"
+        ".body blockquote{border-left:3px solid #b00;margin:.7em 0;padding:0 .9em;color:#444}"
+        ".body code{background:#f0f0f0;padding:.15em .35em;border-radius:3px}"
+        /* buttons + link */
+        ".toggle{font-family:system-ui,sans-serif;margin-top:.8em;padding:.5em 1em;border:none;"
+        "border-radius:6px;background:#b00;color:#fff;font-weight:600;cursor:pointer;font-size:.85em}"
+        ".toggle:hover{background:#900}"
+        ".toggle.expanded-open{background:#555}"
+        ".read{display:inline-block;margin-top:.8em;color:#08c;font-weight:600;font-size:.85em}"
+        ".sitefoot{text-align:center;color:#888;font-size:.85em;padding:1.2em 0 2em}"
         ".sitefoot a{color:#b00}"
+        "@media(max-width:700px){.masonry{columns:1}}"
     )
+
+    script = """
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".story").forEach(function (card) {
+    var btn = card.querySelector(".toggle");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var open = card.classList.toggle("expanded");
+      btn.textContent = open ? "Show less" : "Read full story";
+    });
+  });
+});
+</script>
+"""
 
     return (
         f"<!doctype html><meta charset='utf-8'>"
         f"<meta name='referrer' content='no-referrer'>"
+        f"<meta name='viewport' content='width=device-width, initial-scale=1'>"
         f"<title>Eurth News Network — Yesterday's News Today</title>"
         f"<style>{css}</style>"
         f"<header class='masthead'>"
@@ -169,11 +201,14 @@ def build_html(items):
         f"  <p class='tagline'>Yesterday's News Today</p>"
         f"  <p class='dateline'>LATEST STORIES &middot; UPDATED {escape(last)}</p>"
         f"</header>"
-        f"<div class='wrap'>{''.join(cards)}"
+        f"<div class='wrap'><div class='masonry'>"
+        f"{''.join(cards)}"
+        f"</div>"
         f"  <footer class='sitefoot'>"
         f"    Subscribe: <a href='news.rss'>RSS feed</a>"
         f"  </footer>"
         f"</div>"
+        f"{script}"
     )
 
 
