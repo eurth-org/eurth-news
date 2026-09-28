@@ -122,49 +122,70 @@ def build_rss(items):
 
 def build_html(items):
     cards = []
-    for s in items:
+    for i, s in enumerate(items):
+        rank = str(i + 1).zfill(2)
         cards.append(
             f'<article class="story">'
-            f'<div class="kicker">{escape(s["agency"])}</div>'
+            f'<div class="story-head">'
+            f'<span class="rank">{rank}</span>'
+            f'<span class="kicker">{escape(s["agency"])}</span>'
+            f'</div>'
             f'<div class="byline">By <strong>{escape(s["author"])}</strong> &middot; {escape(fmt_date(s["date"]))}</div>'
             f'<div class="body">{s["cooked"]}</div>'
-            f'<button class="toggle" type="button">Read full story</button>'
+            f'<button class="toggle" type="button">Read full story &darr;</button>'
             f'<a class="read" href="{escape(s["url"])}">Open the exact post &rarr;</a>'
             f'</article>'
         )
     last = fmt_date(items[0]["date"]) if items else ""
+    today = datetime.datetime.utcnow().strftime("%d %b %Y")
 
     css = (
         "body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;"
-        "max-width:1100px;margin:auto;padding:0 1em;background:#f4f4f4;color:#222}"
-        ".masthead{font-family:Georgia,'Times New Roman',serif;text-align:center;"
-        "border-bottom:4px double #222;background:#fff;padding:1.6em 1em .9em;margin-bottom:1.4em}"
-        ".masthead h1{font-size:3em;margin:0;font-weight:700;letter-spacing:.02em;text-transform:uppercase}"
-        ".masthead .tagline{font-style:italic;color:#555;margin:.3em 0 0;font-size:1.1em}"
-        ".masthead .dateline{color:#777;font-size:.8em;margin-top:.7em;letter-spacing:.06em;"
-        "font-family:system-ui,sans-serif}"
-        ".masonry{columns:2 340px;column-gap:1.4em}"
-        ".wrap{padding:0 0 1.5em}"
-        ".story{break-inside:avoid;margin:0 0 1.4em;background:#fff;border:1px solid #e5e5e5;"
-        "border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.10);padding:1.1em 1.2em}"
+        "max-width:1200px;margin:auto;padding:0 1.5em 2em;background:#f7f4ec;color:#111}"
+        ".paper{background:#fffdf7;border:1px solid #ddd;padding:0 1.6em 2em;margin-top:1.5em}"
+        ".topbar{display:flex;justify-content:space-between;align-items:center;"
+        "font-size:.75em;letter-spacing:.12em;text-transform:uppercase;color:#555;"
+        "border-bottom:1px solid #444;padding:.8em 0}"
+        ".topbar a{color:#111;text-decoration:none;border-bottom:1px solid #111}"
+        ".masthead{text-align:center;padding:1.6em .5em 1.1em;"
+        "border-bottom:4px double #111}"
+        ".masthead h1{font-family:Georgia,'Times New Roman',serif;font-size:3.2em;"
+        "margin:0;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#111}"
+        ".masthead .tagline{font-family:Georgia,serif;font-style:italic;color:#333;"
+        "margin:.35em 0 0;font-size:1.15em}"
+        ".nav-strip{display:flex;justify-content:center;gap:1.6em;flex-wrap:wrap;"
+        "font-size:.8em;letter-spacing:.1em;text-transform:uppercase;color:#333;"
+        "border-bottom:1px solid #111;padding:.7em .5em}"
+        ".nav-strip a{color:#333;text-decoration:none}"
+        ".nav-strip a:hover{text-decoration:underline}"
+        ".masonry{columns:3 300px;column-gap:2em;column-rule:1px solid #cfc9ba;margin-top:1.8em}"
+        ".story{break-inside:avoid;margin:0 0 1.6em;padding-bottom:1.6em;"
+        "border-bottom:1px solid #cfc9ba}"
+        ".story-head{display:flex;align-items:baseline;gap:.7em;margin-bottom:.25em}"
+        ".rank{font-family:Georgia,serif;font-size:2.2em;font-weight:700;color:#b9b3a2;line-height:1}"
         ".kicker{font-family:Georgia,serif;font-weight:700;text-transform:uppercase;"
-        "letter-spacing:.07em;font-size:.95em;color:#b00;margin-bottom:.35em}"
-        ".byline{color:#666;font-size:.85em;font-style:italic;margin-bottom:.7em}"
-        ".body{font-size:1em;line-height:1.55;display:-webkit-box;-webkit-line-clamp:6;"
-        "-webkit-box-orient:vertical;overflow:hidden}"
+        "letter-spacing:.09em;font-size:1.05em;color:#111}"
+        ".byline{color:#555;font-size:.8em;font-style:italic;margin-bottom:.7em;"
+        "letter-spacing:.03em}"
+        ".body{font-size:1em;line-height:1.6;color:#222;display:-webkit-box;"
+        "-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden}"
         ".story.expanded .body{-webkit-line-clamp:unset;overflow:visible}"
-        ".body img{max-width:100%;height:auto;border-radius:6px}"
-        ".body pre{background:#f5f5f5;padding:.8em;overflow:auto;border-radius:4px}"
-        ".body blockquote{border-left:3px solid #b00;margin:.7em 0;padding:0 .9em;color:#444}"
-        ".body code{background:#f0f0f0;padding:.15em .35em;border-radius:3px}"
-        ".toggle{font-family:system-ui,sans-serif;margin-top:.8em;padding:.5em 1em;border:none;"
-        "border-radius:6px;background:#b00;color:#fff;font-weight:600;cursor:pointer;font-size:.85em}"
-        ".toggle:hover{background:#900}"
-        ".story.expanded .toggle{background:#555}"
-        ".read{display:inline-block;margin-top:.8em;color:#08c;font-weight:600;font-size:.85em}"
-        ".sitefoot{text-align:center;color:#888;font-size:.85em;padding:1.2em 0 2em}"
-        ".sitefoot a{color:#b00}"
-        "@media(max-width:700px){.masonry{columns:1}}"
+        ".body img{max-width:100%;height:auto;margin:.4em 0}"
+        ".body pre{background:#f1ede2;padding:.8em;overflow:auto;border:1px solid #d8d2c2}"
+        ".body blockquote{border-left:3px solid #888;margin:.7em 0;padding:0 .9em;color:#444}"
+        ".body code{background:#efeade;padding:.15em .35em}"
+        ".toggle{font-family:Georgia,serif;margin-top:1em;padding:.45em 1em;background:transparent;"
+        "color:#111;border:1px solid #111;cursor:pointer;font-size:.82em;letter-spacing:.08em;"
+        "text-transform:uppercase}"
+        ".toggle:hover{background:#111;color:#fffdf7}"
+        ".read{display:inline-block;margin-top:.9em;color:#111;font-size:.82em;"
+        "letter-spacing:.08em;text-transform:uppercase;text-decoration:underline}"
+        ".sitefoot{text-align:center;border-top:4px double #111;margin-top:2em;padding-top:1.4em}"
+        ".sitefoot .logo{font-family:Georgia,serif;font-weight:700;font-size:1.8em;"
+        "text-transform:uppercase;letter-spacing:.06em;color:#111;margin:0 0 .3em}"
+        ".sitefoot .links{font-size:.8em;color:#555}.sitefoot .links a{color:#111;"
+        "margin:0 .5em;text-decoration:underline}"
+        "@media(max-width:800px){.masonry{columns:1}.masthead h1{font-size:2.2em}}"
     )
 
     script = """
@@ -175,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!btn) return;
     btn.addEventListener("click", function () {
       var open = card.classList.toggle("expanded");
-      btn.textContent = open ? "Show less" : "Read full story";
+      btn.textContent = open ? "Show less &uarr;" : "Read full story &darr;";
     });
   });
 });
@@ -188,16 +209,27 @@ document.addEventListener("DOMContentLoaded", function () {
         f"<meta name='viewport' content='width=device-width, initial-scale=1'>"
         f"<title>Eurth News Network - Yesterday's News Today</title>"
         f"<style>{css}</style>"
-        f"<header class='masthead'>"
-        f"  <h1>Eurth News Network</h1>"
-        f"  <p class='tagline'>Yesterday's News Today</p>"
-        f"  <p class='dateline'>LATEST STORIES &middot; UPDATED {escape(last)}</p>"
-        f"</header>"
-        f"<div class='wrap'><div class='masonry'>"
-        f"{''.join(cards)}"
-        f"</div>"
+        f"<div class='paper'>"
+        f"  <div class='topbar'>"
+        f"    <span>Eurth News Network &middot; {today}</span>"
+        f"    <a href='news.rss'>Subscribe</a>"
+        f"  </div>"
+        f"  <header class='masthead'>"
+        f"    <h1>Eurth News Network</h1>"
+        f"    <p class='tagline'>Yesterday's News Today</p>"
+        f"  </header>"
+        f"  <nav class='nav-strip'>"
+        f"    <a href='{SITE}/c/affairs/the-newsroom/36'>The Newsroom</a>"
+        f"    <a href='news.rss'>RSS Feed</a>"
+        f"    <span>Updated {escape(last)}</span>"
+        f"  </nav>"
+        f"  <div class='masonry'>"
+        f"    {''.join(cards)}"
+        f"  </div>"
         f"  <footer class='sitefoot'>"
-        f"    Subscribe: <a href='news.rss'>RSS feed</a>"
+        f"    <p class='logo'>Eurth News Network</p>"
+        f"    <p class='links'><a href='news.rss'>RSS</a> &middot; "
+        f"<a href='{SITE}'>Eurth.org</a> &middot; Navigation &middot; Terms</p>"
         f"  </footer>"
         f"</div>"
         f"{script}"
