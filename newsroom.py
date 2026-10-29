@@ -396,15 +396,22 @@ def build_rss(items):
 FONTS = ("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400"
          "&family=JetBrains+Mono:wght@400;700&display=swap")
 
-SECTIONS = [  # the in-character categories on eurth.org, with their forum colours
-    ("Affairs", "affairs/17", "cat-blue"),
-    ("Business", "business/18", "cat-grey"),
-    ("Conflict", "conflict/19", "cat-silver"),
-    ("Diplomacy", "diplomacy/20", "cat-vermilion"),
-    ("Entertainment", "entertainment/21", "cat-red"),
-    ("Future & Past", "future-past/22", "cat-orange"),
-    ("The Newsroom", "affairs/the-newsroom/36", "cat-red"),
-]
+MENU = [("Top stories", "top"), ("More stories", "more"), ("Most read", "most-read"), ("Nations", "nations")]
+
+ICONS = (  # Font Awesome "bars" and "xmark", the forum's icon set
+    "<svg class='i-bars' viewBox='0 0 448 512' aria-hidden='true'><path d='M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 "
+    "14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 "
+    "32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 "
+    "32 32z'/></svg>"
+    "<svg class='i-close' viewBox='0 0 384 512' aria-hidden='true'><path d='M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8"
+    "-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 "
+    "32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 "
+    "150.6z'/></svg>"
+)
+
+SEARCH = ("<label class='search js-only'><span class='sr'>Search stories</span>"
+          "<input id='q' type='search' placeholder='Search headlines, agencies, nations' autocomplete='off'>"
+          "<kbd>/</kbd></label>")
 
 SHARE_CARD = (f"{PAGE_URL}static/share-card.jpg", 1200, 800,
               "Eurth News Network: yesterday's news today, from the nations of Eurth")
@@ -416,7 +423,6 @@ CSS = """
   --eurth-blue:#2698d4;--eurth-blue-deep:#1b6fa0;--night:#002b36;
   --surface:#ffffff;--surface-raised:#f8f8f8;--line:#e9e9e9;--line-strong:#646464;--ink:#222222;--ink-muted:#646464;
   --accent-text:#1b6fa0;--highlight:#ffff4d;--on-highlight:#222222;--shade:rgba(0,43,54,.6);
-  --cat-blue:#2698d4;--cat-grey:#808281;--cat-silver:#b3b5b4;--cat-vermilion:#e45735;--cat-red:#bf1e2e;--cat-orange:#f1592a;
   --radius-sm:2px;--radius-md:12px;--radius-avatar:10%;
   --serif:"Libre Baskerville",Baskerville,Georgia,serif;
   --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
@@ -436,10 +442,10 @@ a{color:inherit}
 .skip:focus{left:.5em}
 .paper{max-width:1280px;margin:0 auto;padding:0 2em 2.5em}
 
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:6px 16px;flex-wrap:wrap;padding:12px 0;
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:6px 16px;flex-wrap:wrap;padding:8px 0;
   border-bottom:1px solid var(--line);font:12px/20px var(--mono);color:var(--ink-muted)}
 .topbar>span{display:inline-flex;align-items:center;gap:12px}
-.topbar img{display:block;width:24px;height:24px}
+.globe img{display:block;width:32px;height:32px}
 .topbar a{color:var(--ink)}
 .masthead{text-align:center;padding:1.4em .5em 1.1em;border-bottom:4px double var(--ink)}
 .masthead .title{display:block;margin:0;font:400 clamp(2em,6.4vw,4em)/1.08 var(--serif);letter-spacing:-.01em;
@@ -447,16 +453,23 @@ a{color:inherit}
 .tagline{font:italic 1.05em/1.4 var(--serif);color:var(--ink-muted);margin:.5em 0 0}
 .masthead.slim{padding:1em .5em .9em}
 .masthead.slim .title{font-size:clamp(1.5em,4vw,2.25em)}
-.nav-strip{display:flex;justify-content:center;gap:8px 26px;flex-wrap:wrap;padding:12px .5em;border-bottom:1px solid var(--ink)}
-.chip{display:inline-flex;align-items:center;gap:8px;font:700 14px/20px var(--sans);color:var(--ink);text-decoration:none}
-.chip::before{content:"";width:10px;height:10px;border-radius:var(--radius-sm);background:var(--chip,var(--eurth-blue));flex:none}
-a.chip:hover{text-decoration:underline;text-underline-offset:3px}
+.bar{position:sticky;top:0;z-index:4;background:var(--surface);border-bottom:1px solid var(--ink)}
+html:not(.js) .bar{position:static}
+.bar-in{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;min-height:56px}
+.brand{justify-self:start;font:400 1.15em/1.2 var(--serif);text-decoration:none;white-space:nowrap;visibility:hidden;
+  opacity:0;transition:opacity .2s,visibility .2s}
+.bar.stuck .brand{visibility:visible;opacity:1}
+.panel{display:contents}
+.menu{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 28px}
+.menu a{font:700 14px/20px var(--sans);text-decoration:none;padding:6px 0;border-bottom:2px solid transparent}
+.menu a:hover{border-bottom-color:var(--eurth-blue)}
+.menu-btn{display:none}
+#top,#more,#most-read,#nations,#main{scroll-margin-top:72px}
 
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:12px 0;
-  border-bottom:1px solid var(--line)}
+.toolbar{padding:12px 0;border-bottom:1px solid var(--line)}
 .edition{margin:0;font-size:14px;line-height:20px;color:var(--ink-muted)}
 .edition strong,.new-count{color:var(--ink)}
-.search{position:relative;flex:0 1 340px}
+.search{position:relative;justify-self:end;width:100%;max-width:340px}
 .search input{width:100%;font:15px/20px var(--sans);padding:8px 40px 8px 10px;background:var(--surface);color:var(--ink);
   border:1px solid var(--line-strong);border-radius:var(--radius-sm);-webkit-appearance:none;appearance:none}
 .search input::placeholder{color:var(--ink-muted)}
@@ -511,13 +524,18 @@ a.chip:hover{text-decoration:underline;text-underline-offset:3px}
 .group-h{display:flex;align-items:center;gap:12px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
   margin:0 0 20px}
 .group-h::after{content:"";flex:1;border-top:1px solid var(--ink)}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:32px 28px;margin-bottom:40px}
-.card{position:relative;display:flex;flex-direction:column;padding-top:16px;border-top:1px solid var(--line)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:24px 36px;margin-bottom:40px}
+.card{position:relative;display:flex;flex-direction:column;padding:16px;margin:0 -16px;border-top:1px solid var(--line);
+  border-radius:var(--radius-sm);transition:background-color .15s ease,border-color .15s ease}
+.card:hover,.card:focus-within{background:var(--surface-raised);border-top-color:var(--eurth-blue);
+  box-shadow:inset 0 1px 0 var(--eurth-blue)}
+.card .thumb img{transition:transform .4s ease}
+.card:hover .thumb img{transform:scale(1.04)}
 .card:not(.has-thumb) .dek{-webkit-line-clamp:9}
 .filtering .front,.filtering .group-h{display:none}
 .empty{padding:32px 0;text-align:center;color:var(--ink-muted)}
 
-.rail{border-left:1px solid var(--line);padding-left:36px;align-self:start;position:sticky;top:16px}
+.rail{border-left:1px solid var(--line);padding-left:36px;align-self:start;position:sticky;top:72px}
 .rail section{margin-bottom:40px}
 .mostread{list-style:none;margin:0;padding:0}
 .mostread li{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;padding:12px 0;
@@ -585,6 +603,7 @@ html.reading{overflow:hidden}
 @media (min-width:860px){#reader{height:calc(100dvh - 48px);margin:24px auto;border:1px solid var(--line)}}
 @media (prefers-reduced-motion:no-preference){#reader[open]{animation:rise .18s ease-out}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}}}
+@media (prefers-reduced-motion:reduce){.card,.card .thumb img,.brand{transition:none}.card:hover .thumb img{transform:none}}
 @media (max-width:1000px){.body-grid{grid-template-columns:minmax(0,1fr) 240px}}
 @media (max-width:860px){
   .paper{padding:0 16px 32px}
@@ -592,7 +611,21 @@ html.reading{overflow:hidden}
   .latest{border-left:0;padding-left:0;margin-top:32px}
   .lead .thumb{margin-left:-16px;margin-right:-16px;border-radius:0}
   .rail{border-left:0;padding-left:0;position:static;border-top:4px double var(--ink);padding-top:24px}
-  .search{flex-basis:100%}
+  .bar-in{display:flex;flex-wrap:wrap;align-items:center;gap:0 12px;min-height:52px}
+  .menu-btn{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font:700 14px/20px var(--sans);color:var(--ink);
+    background:transparent;border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer}
+  .menu-btn svg{width:14px;height:16px;fill:currentColor}
+  .menu-btn .i-close,.bar.open .menu-btn .i-bars{display:none}
+  .bar.open .menu-btn .i-close{display:block}
+  .panel{display:flex;flex-direction:column;gap:16px;width:100%;padding:0 0 16px}
+  html.js .bar:not(.open) .panel{display:none}
+  .menu{flex-direction:column;gap:0}
+  .menu a{padding:12px 0;border-bottom:1px solid var(--line)}
+  .menu a:hover{border-bottom-color:var(--line)}
+  html:not(.js) .menu{flex-direction:row;gap:4px 20px}
+  html:not(.js) .menu a{border:0;padding:8px 0}
+  .bar .search{max-width:none}
+  .search kbd{display:none}
 }
 @media (max-width:560px){
   .cards{grid-template-columns:minmax(0,1fr);gap:20px}
@@ -600,29 +633,21 @@ html.reading{overflow:hidden}
   .card.has-thumb>*{grid-column:1}
   .card.has-thumb .thumb{grid-column:2;grid-row:1/span 4;aspect-ratio:1;margin:0}
   .card .dek,.card:not(.has-thumb) .dek{-webkit-line-clamp:3}
-  .nav-strip{gap:6px 18px}
   .pager{grid-template-columns:1fr}.pager .older{grid-column:1;text-align:left}
 }
 main:not(.filtering) .card.dup{display:none}
-@media print{.toolbar,.nav-strip,.rail,#reader,.skip,.comments{display:none!important}}
+@media print{.toolbar,.bar,.rail,#reader,.skip,.comments{display:none!important}}
 """
 
-SCRIPT = """
-(function () {
-  var S = JSON.parse(document.getElementById("stories-data").textContent);
-  var store = {
-    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  };
+BASE_SCRIPT = """
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var main = $("#main"), q = $("#q"), note = $(".filter-note"), empty = $(".empty");
 
-  // Relative times, refreshed every minute; the full date stays in the tooltip.
+  // Relative times, refreshed every minute; the full date, in the reader's own time zone, stays in the tooltip.
   var day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
   var dayYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
   var full = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric",
-                                                hour: "2-digit", minute: "2-digit" });
+                                                hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
   function ago(t) {
     var s = (Date.now() - t) / 1000, d = Math.floor(s / 86400);
     if (s < 60) return "just now";
@@ -638,8 +663,39 @@ SCRIPT = """
       if (!isNaN(t)) { el.textContent = ago(t); el.title = full.format(t); }
     });
   }
-  tick();
-  setInterval(tick, 60000);
+
+  // Today's date and the reader's local time, on the minute.
+  var clock = $("#clock");
+  var today = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
+  var hhmm = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+  function minute() {
+    var d = new Date();
+    if (clock) { clock.textContent = today.format(d) + " \u00b7 " + hhmm.format(d); clock.setAttribute("datetime", d.toISOString()); }
+    tick();
+  }
+  minute();
+  setTimeout(function () { minute(); setInterval(minute, 60000); }, 60000 - Date.now() % 60000);
+
+  // Section bar: sticks to the top, shows the title once the masthead has scrolled away, folds into a menu on phones.
+  var bar = $("#bar"), menuBtn = $("#menu-btn"), mast = $(".masthead");
+  if (mast && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (e) { bar.classList.toggle("stuck", !e[0].isIntersecting); }).observe(mast);
+  }
+  function menu(open) { bar.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", String(open)); }
+  menuBtn.addEventListener("click", function () { menu(!bar.classList.contains("open")); });
+  $$("#panel a").forEach(function (a) { a.addEventListener("click", function () { menu(false); }); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && bar.classList.contains("open") && e.target.id !== "q") { menu(false); menuBtn.focus(); }
+  });
+"""
+
+SCRIPT = """
+  var S = JSON.parse(document.getElementById("stories-data").textContent);
+  var store = {
+    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var main = $("#main"), q = $("#q"), note = $(".filter-note"), empty = $(".empty");
 
   // "New" since the previous visit (a visit ends after 30 idle minutes) and stories already read.
   var now = Date.now(), visit = store.get("enn:visit") || {}, since = visit.prev || 0;
@@ -682,6 +738,7 @@ SCRIPT = """
     $$(".nations button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.nation === nation)); });
     note.hidden = !active;
     empty.hidden = !active || shown > 0;
+    if (active && main.getBoundingClientRect().top < 0) main.scrollIntoView();
     if (active) {
       var what = shown + (shown === 1 ? " story" : " stories");
       if (nation) what += " from " + nation;
@@ -786,7 +843,6 @@ SCRIPT = """
     else if (dlg.open) { pushed = false; dlg.close(); }
   });
   if (fromHash() > -1) show(fromHash(), true);
-})();
 """
 
 
@@ -904,16 +960,26 @@ def oembed(title, image, author=None):
 
 
 def topbar(now, base=""):
-    return (f"<div class='topbar'><span><a href='{SITE}'><img src='{base}static/eurth-yurt-circle.svg' alt='eurth.org' "
-            f"width='24' height='24'></a>{now:%A} {now.day} {now:%b %Y}</span>"
+    """The rotating globe (still for reduced motion), today's date and, once the script runs, the reader's local time."""
+    return (f"<div class='topbar'><span><a class='globe' href='{SITE}'><picture>"
+            f"<source srcset='{base}static/eurth-globe-still.png' media='(prefers-reduced-motion: reduce)'>"
+            f"<img src='{base}static/eurth-globe.gif' alt='eurth.org' width='32' height='32'></picture></a>"
+            f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time></span>"
             f"<span>Updated <time datetime='{now.isoformat(timespec='seconds')}' data-rel>{now:%H:%M} UTC</time>"
             f" · <a href='{base}news.rss'>RSS</a></span></div>")
 
 
-def nav():
-    links = "".join(f"<a class='chip' style='--chip:var(--{tok})' href='{SITE}/c/{path}'>{esc(name)}</a>"
-                    for name, path, tok in SECTIONS)
-    return f"<nav class='nav-strip' aria-label='Categories on eurth.org'>{links}</nav>"
+def bar(base="", search=""):
+    """Sticky section bar: links within this site (search too on the front page); a menu button on phones."""
+    links = ""
+    for name, anchor in MENU:
+        cls = " class='js-only'" if anchor == "nations" else ""
+        links += f"<a href='{base}#{anchor}'{cls}>{name}</a>"
+    return (f"<div class='bar' id='bar'><div class='bar-in'><a class='brand' href='{base or '#'}'>Eurth News Network</a>"
+            f"<button type='button' class='menu-btn js-only' id='menu-btn' aria-expanded='false' aria-controls='panel'>"
+            f"{ICONS}<span>Menu</span></button>"
+            f"<div class='panel' id='panel'><nav class='menu' aria-label='Sections'>{links}</nav>{search}</div>"
+            f"</div></div>")
 
 
 def footer(base=""):
@@ -938,7 +1004,7 @@ def build_html(items):
                 f'<div class="cards">{"".join(card(s, i) for i, s in enumerate(items))}</div>')
     front = ""
     if items:
-        front = (f'<section class="front" aria-label="Top stories">{lead_story(items[0])}'
+        front = (f'<section class="front" id="top" aria-label="Top stories">{lead_story(items[0])}'
                  f'<div class="latest"><h2 class="col-h">Also new</h2>'
                  f'{"".join(side_story(items[i], i) for i in range(1, min(FRONT, len(items))))}</div></section>')
 
@@ -956,9 +1022,9 @@ def build_html(items):
     )
     rail = ""
     if most_read:
-        rail += f'<section><h2 class="col-h">Most read</h2><ol class="mostread">{most_read}</ol></section>'
+        rail += f'<section id="most-read"><h2 class="col-h">Most read</h2><ol class="mostread">{most_read}</ol></section>'
     if chips:
-        rail += (f'<section class="js-only"><h2 class="col-h">Nations in this edition</h2>'
+        rail += (f'<section class="js-only" id="nations"><h2 class="col-h">Nations in this edition</h2>'
                  f'<ul class="nations">{chips}</ul></section>')
 
     data = [{
@@ -977,20 +1043,17 @@ def build_html(items):
         f"<div class='paper'>{topbar(now)}"
         f"  <header class='masthead'><h1 class='title'>Eurth News Network</h1>"
         f"    <p class='tagline'>Yesterday's News Today</p></header>"
-        f"  {nav()}"
+        f"  {bar('', SEARCH)}"
         f"  <div class='toolbar'>"
         f"    <p class='edition'><strong>{plural(len(items), 'story')}</strong> from {plural(len(agencies), 'agency')}"
         f"      in {plural(len(nations), 'nation')}<span class='new-count' hidden></span></p>"
-        f"    <label class='search js-only'><span class='sr'>Search stories</span>"
-        f"      <input id='q' type='search' placeholder='Search headlines, agencies, nations' autocomplete='off'>"
-        f"      <kbd>/</kbd></label>"
         f"  </div>"
         f"  <main id='main'>"
         f"    <p class='filter-note' hidden><span class='filter-text' role='status'></span>"
         f"      <button type='button' class='btn clear-filters'>Clear</button></p>"
         f"    {front}"
         f"    <div class='body-grid'>"
-        f"      <div class='feed'>{feed}"
+        f"      <div class='feed' id='more'>{feed}"
         f"        <p class='empty' hidden>No stories match. <button type='button' class='btn clear-filters'>Clear search</button></p>"
         f"      </div>"
         f"      <aside class='rail' aria-label='Most read and nations'>{rail}</aside>"
@@ -1020,7 +1083,7 @@ def build_html(items):
         f"</div></dialog>"
         f"<script type='application/json' id='stories-data'>{data_json}</script>"
         f"{bodies}"
-        f"<script>{SCRIPT}</script>"
+        f"<script>(function () {{{BASE_SCRIPT}{SCRIPT}}})();</script>"
         f"</body></html>"
     )
 
@@ -1061,7 +1124,7 @@ def build_story(items, i):
         + f"<body><a class='skip' href='#story'>Skip to story</a>"
         f"<div class='paper'>{topbar(now, base)}"
         f"  <header class='masthead slim'><a class='title' href='{base}'>Eurth News Network</a></header>"
-        f"  {nav()}"
+        f"  {bar(base)}"
         f"  <main id='story' class='story-page'>"
         f"    <article class='r-article'>{kicker(s)}<h1 class='r-title'>{esc(s['headline'])}</h1>"
         f"      <p class='meta r-meta'>{avatar(s['avatar'])}<span class='nation'>{esc(s['nation'])}</span>"
@@ -1075,7 +1138,7 @@ def build_story(items, i):
         f"    <nav class='pager' aria-label='More stories'>{pager}</nav>"
         f"  </main>"
         f"  {footer(base)}"
-        f"</div></body></html>"
+        f"</div><script>(function () {{{BASE_SCRIPT}}})();</script></body></html>"
     )
 
 
