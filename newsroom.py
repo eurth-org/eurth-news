@@ -710,6 +710,7 @@ html:not(.js) .bar{position:static}
 .elsewhere a:hover .n{text-decoration:underline}
 .elsewhere .d{font:13px/20px var(--mono);color:var(--ink-muted)}
 .sitefoot .legal{font-size:13px;line-height:20px;margin-top:16px}
+.sitefoot .legal+.legal{margin-top:8px}
 .paper-row{display:flex;justify-content:center;align-items:center;gap:8px 12px;flex-wrap:wrap}
 .paper-btn::before{content:"";width:14px;height:14px;margin-right:10px;border-radius:var(--radius-sm);background:var(--parchment);
   border:1px solid var(--line-strong)}
@@ -1339,7 +1340,11 @@ def footer(base=""):
             f"Orioni press likes it.</span></p>"
             f"<p class='legal'>{esc(RIGHTS)} The stories are © their authors, the members of Eurth who posted them on "
             f"eurth.org. Nothing here may be copied, republished or used for text and data mining or AI training "
-            f"without written permission.</p></footer>")
+            f"without written permission.</p>"
+            f"<p class='legal'>Members sometimes put images and other material from other websites in their stories, "
+            f"linked or copied. Eurth doesn't own or check that material and isn't responsible for it; its rights stay "
+            f"with whoever holds them. If something of yours appears here without your permission, flag the original "
+            f"post on eurth.org; once it comes down there, it's gone from here at the next update.</p></footer>")
 
 
 def build_html(items):
