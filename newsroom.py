@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Rolling news feed: newest 25 stories (replies) in The Newsroom, category 36, on eurth.org."""
+"""Rolling news feed: newest 25 stories (replies) in The Newsroom, category 36, on eurth.org.
+
+Copyright © 2026 Eurth. All rights reserved. See LICENSE.
+"""
 import json, os, re, shutil, time, datetime
 from html import escape as esc
 from html.parser import HTMLParser
@@ -371,6 +374,7 @@ def build_rss(items):
         f'<atom:link href="{PAGE_URL}news.rss" rel="self" type="application/rss+xml"/>',
         "<description>Rolling feed of the 25 newest news stories in The Newsroom</description>",
         "<language>en</language>",
+        f"<copyright>{escape(RIGHTS)} Stories © their authors.</copyright>",
         f"<lastBuildDate>{rss_date(now)}</lastBuildDate>",
     ]
     for s in items:
@@ -448,6 +452,14 @@ THEME_ICONS = (
     "values='2;6'/><animate fill='freeze' attributeName='r' begin='0.1s' dur='0.4s' values='1;10'/></circle></mask>"
     "<circle cx='12' cy='12' r='6' fill='currentColor' mask='url(#enn-moon)'><set attributeName='opacity' begin='0.5s' "
     "to='0'/><animate fill='freeze' attributeName='r' begin='0.1s' dur='0.4s' values='6;10'/></circle></svg></template>"
+    "<template id='i-auto'>" + SVG +
+    "<circle cx='12' cy='12' r='9' fill='none' stroke='currentColor' stroke-width='2' stroke-dasharray='57' "
+    "stroke-dashoffset='57'><animate fill='freeze' attributeName='stroke-dashoffset' dur='0.4s' values='57;0'/></circle>"
+    "<path d='M12 3a9 9 0 0 0 0 18z' fill='currentColor' opacity='0'><animate fill='freeze' attributeName='opacity' "
+    "begin='0.4s' dur='0.25s' values='0;1'/></path></svg></template>"
+    "<template id='i-auto-still'>" + SVG +
+    "<circle cx='12' cy='12' r='9' fill='none' stroke='currentColor' stroke-width='2'/>"
+    "<path d='M12 3a9 9 0 0 0 0 18z' fill='currentColor'/></svg></template>"
     "<template id='i-sun-still'>" + SVG +
     "<g fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2'><circle cx='12' cy='12' r='5'/>"
     f"<path d='{RAYS[0]}{RAYS[1]}'/></g></svg></template>"
@@ -456,10 +468,18 @@ THEME_ICONS = (
     f"stroke-width='2'/><g fill='currentColor'><path d='{STARS[0]}'/><path d='{STARS[1]}'/></g></svg></template>"
 )
 
-THEME_BUTTON = ("<button type='button' class='theme-btn js-only' id='theme' aria-pressed='false' aria-label='Dark mode' "
-                "title='Dark mode'><span class='theme-icon' aria-hidden='true'></span></button>")
+THEME_BUTTON = ("<button type='button' class='theme-btn js-only' id='theme' aria-label='Theme' title='Theme'>"
+                "<span class='theme-icon' aria-hidden='true'></span></button>")
+
+SECONDS_BUTTON = ("<button type='button' class='secs-btn js-only' id='secs' aria-pressed='true' aria-label='Show seconds' "
+                  "title='Show seconds'>" + SVG + "<g fill='none' stroke='currentColor' stroke-width='2' "
+                  "stroke-linecap='round'><circle cx='12' cy='13' r='8'/><path d='M12 9v4l2.5 2M10 2h4M19 6l1.5-1.5'/></g>"
+                  "</svg></button>")
 
 SEARCH = ("<div class='search js-only' role='search'><label class='sr' for='q'>Search stories</label>"
+          "<svg class='search-i' viewBox='0 0 512 512' aria-hidden='true' focusable='false'><path d='M416 208c0 45.9-14.9 "
+          "88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 "
+          "416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z'/></svg>"
           "<input id='q' type='search' placeholder='Search headlines, agencies, nations' autocomplete='off'>"
           "<kbd aria-hidden='true'>/</kbd></div>")
 
@@ -467,6 +487,19 @@ SHARE_CARD = (f"{PAGE_URL}static/share-card.jpg", 1200, 800,
               "Eurth News Network: yesterday's news today, from the nations of Eurth")
 DESCRIPTION = ("Yesterday's news today: the newest stories from the nations of Eurth, the Worldbuilding & "
                "Roleplay Writing Community. Every story is fiction, written by its members.")
+
+OWNER, SINCE = "Eurth", 2026
+YEARS = str(SINCE) if datetime.date.today().year <= SINCE else f"{SINCE}–{datetime.date.today().year}"
+RIGHTS = f"© {YEARS} {OWNER}. All rights reserved."
+
+FOOTER_NAV = [  # (name, where it lives, link)
+    ("Forums", "eurth.org", f"{SITE}/"),
+    ("Map", "map.eurth.org", "https://map.eurth.org/"),
+    ("Governmint", "gov.eurth.org", "https://gov.eurth.org/"),
+    ("Uptime", "status.eurth.org", "https://status.eurth.org/"),
+    ("The Newsroom", "eurth.org", f"{SITE}/c/affairs/the-newsroom/36"),
+    ("Guidelines", "eurth.org", f"{SITE}/guidelines"),
+]
 
 # Theme surfaces for the browser's own chrome (address bar), set before the page paints.
 CHROME = {"light": "#ffffff", "paper": "#fcf6e1", "dark": "#002b36"}
@@ -521,7 +554,18 @@ abbr[title]{text-decoration:none}
   font:13px/20px var(--mono);color:var(--ink-muted)}
 .topbar>div{display:flex;align-items:center;gap:0 12px;flex-wrap:wrap}
 .topbar a{color:var(--ink);text-underline-offset:3px}
-#clock{display:inline-block}
+#clock{display:inline-block;font-variant-numeric:tabular-nums}
+#clock.dim .sep{visibility:hidden}
+.secs-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:0 -8px 0 -4px;padding:0;
+  border:0;border-radius:999px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.secs-btn svg{width:18px;height:18px}
+.secs-btn[aria-pressed=true]{color:var(--ink)}
+.secs-btn[aria-pressed=true] svg{background:var(--surface-raised);border-radius:999px;box-shadow:0 0 0 4px var(--surface-raised)}
+.secs-btn:hover{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;z-index:6;max-width:calc(100vw - 32px);margin:0;padding:10px 16px;
+  font:15px/22px var(--sans);color:var(--surface);background:var(--ink);border-radius:var(--radius-md);
+  opacity:0;transform:translate(-50%,8px);pointer-events:none;transition:opacity .25s,transform .25s var(--ease)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 .theme-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:4px 0;padding:0;
   border:1px solid var(--line-strong);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;
   transition:background-color .2s,transform .15s}
@@ -551,7 +595,9 @@ html:not(.js) .bar{position:static}
 .menu a:hover::after,.menu a:focus-visible::after{transform:scaleX(1)}
 .menu-btn{display:none}
 .search{position:relative;justify-self:end;width:100%;max-width:340px}
-.search input{width:100%;min-height:44px;font:15px/20px var(--sans);padding:10px 44px 10px 12px;background:var(--surface);
+.search-i{position:absolute;left:13px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:var(--ink-muted);
+  pointer-events:none}
+.search input{width:100%;min-height:44px;font:15px/20px var(--sans);padding:10px 44px 10px 38px;background:var(--surface);
   color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--radius-sm);-webkit-appearance:none;appearance:none}
 .search input::placeholder{color:var(--ink-muted);opacity:1}
 .search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:12px/1 var(--mono);color:var(--ink-muted);
@@ -609,7 +655,10 @@ html:not(.js) .bar{position:static}
 .side .thumb{grid-column:2;grid-row:1/span 3;aspect-ratio:1;margin:0}
 .side .hl{font-size:1.05em}
 .side:hover .thumb img{transform:scale(1.05)}
-.card .hl a::after,.side .hl a::after{content:"";position:absolute;inset:0}
+.card .hl a::after,.side .hl a::after,.lead .hl a::after{content:"";position:absolute;inset:0}
+.lead .btn{position:relative;z-index:1}
+.lead:hover .hl a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em}
+.lead:hover .thumb img{transform:scale(1.02)}
 
 .body-grid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:36px;margin-top:32px}
 .group-h{display:flex;align-items:center;gap:12px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
@@ -652,7 +701,15 @@ html:not(.js) .bar{position:static}
 .sitefoot{text-align:center;border-top:4px double var(--ink);margin-top:16px;padding-top:24px}
 .sitefoot .title{font:400 1.6em/1.2 var(--serif);margin:0 0 8px}
 .sitefoot p{font-size:15px;line-height:24px;color:var(--ink-muted);margin:8px auto;max-width:46em}
-.sitefoot .links a{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;color:var(--accent-text)}
+.elsewhere ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:4px 12px;
+  max-width:980px;margin:20px auto;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.elsewhere a{display:flex;flex-direction:column;justify-content:center;min-height:44px;padding:6px 8px;text-decoration:none;
+  border-radius:var(--radius-sm);transition:background-color .15s}
+.elsewhere a:hover{background:var(--surface-raised)}
+.elsewhere .n{font:700 15px/20px var(--sans);color:var(--accent-text)}
+.elsewhere a:hover .n{text-decoration:underline}
+.elsewhere .d{font:13px/20px var(--mono);color:var(--ink-muted)}
+.sitefoot .legal{font-size:13px;line-height:20px;margin-top:16px}
 .paper-row{display:flex;justify-content:center;align-items:center;gap:8px 12px;flex-wrap:wrap}
 .paper-btn::before{content:"";width:14px;height:14px;margin-right:10px;border-radius:var(--radius-sm);background:var(--parchment);
   border:1px solid var(--line-strong)}
@@ -722,7 +779,6 @@ html.vt-shrink::view-transition-new(root){z-index:1}
 @keyframes settle{from{opacity:.35;transform:scale(1.06)}}
 @keyframes grow{from{transform:scaleX(0)}}
 @keyframes pop{0%{opacity:0;transform:scale(.4)}70%{transform:scale(1.12)}100%{transform:none}}
-@keyframes roll{from{opacity:0;transform:translateY(60%)}}
 @keyframes drop{from{opacity:0;transform:translateY(-6px)}}
 .anim .masthead .title{animation:rise .8s var(--ease) both}
 .anim .masthead .tagline{animation:rise .8s .15s var(--ease) both}
@@ -735,7 +791,6 @@ html.vt-shrink::view-transition-new(root){z-index:1}
 .anim .reveal.in{animation:rise .65s var(--ease) both;animation-delay:calc(var(--d, 0) * 1ms)}
 .anim .reveal.in .meter i{animation:grow 1.1s var(--ease) both;animation-delay:calc(var(--d, 0) * 1ms + 250ms)}
 .anim .is-new .kicker::before{animation:pop .5s .4s var(--ease) both}
-.anim #clock.roll{animation:roll .4s var(--ease)}
 .anim .bar.open .panel{animation:drop .25s var(--ease)}
 .anim #reader[open]{animation:rise .25s var(--ease)}
 .anim #reader[open]::backdrop{animation:fade .25s ease}
@@ -767,6 +822,7 @@ html.vt-shrink::view-transition-new(root){z-index:1}
   html:not(.js) .menu a{border:0}
   .bar .search{max-width:none}
   .search kbd{display:none}
+  .c-wd{display:none}
 }
 @media (max-width:560px){
   .cards{grid-template-columns:minmax(0,1fr);gap:20px}
@@ -810,24 +866,44 @@ BASE_SCRIPT = """
     });
   }
 
-  // Today's date and the reader's local time; the clock rolls over on the minute.
-  var clock = $("#clock");
+  // Today's date and the reader's local time, to the second, with the separators blinking every other second as on
+  // a Mac. The seconds button stops both (WCAG 2.2.2); reduced motion keeps the separators still.
+  var clock = $("#clock"), secsBtn = $("#secs"), secs = stored("enn:secs") !== "off", lastMinute = -1, clockTimer = 0;
   var today = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
-  var hhmm = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+  var withSecs = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short" });
+  var noSecs = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
   var zone = new Intl.DateTimeFormat(undefined, { timeZoneName: "long" });
-  function minute() {
-    var d = new Date(), text = today.format(d) + " \\u00b7 " + hhmm.format(d);
-    if (clock && clock.textContent !== text) {
-      var z = zone.formatToParts(d).filter(function (p) { return p.type === "timeZoneName"; })[0];
-      clock.textContent = text;
-      clock.setAttribute("datetime", d.toISOString());
-      if (z) clock.title = "Your local time, " + z.value;
-      clock.classList.remove("roll"); void clock.offsetWidth; clock.classList.add("roll");
+  function part(p, d) {
+    var v = p.value.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    if (p.type === "literal" && /^[:.]$/.test(p.value)) return '<span class="sep">' + v + "</span>";
+    if (p.type === "timeZoneName") {
+      var z = zone.formatToParts(d).filter(function (q) { return q.type === "timeZoneName"; })[0];
+      return '<abbr title="' + (z ? z.value.replace(/"/g, "") : v) + '">' + v + "</abbr>";
     }
-    tick();
+    return v;
   }
-  minute();
-  setTimeout(function () { minute(); setInterval(minute, 60000); }, 60000 - Date.now() % 60000);
+  function render() {
+    var d = new Date();
+    if (clock) {
+      var dp = today.formatToParts(d), wd = dp[0].type === "weekday" ? dp[0].value + dp[1].value : "";
+      clock.innerHTML = '<span class="c-wd">' + wd + "</span>" + dp.slice(wd ? 2 : 0).map(function (p) { return p.value; }).join("") +
+        " \\u00b7 " + (secs ? withSecs : noSecs).formatToParts(d).map(function (p) { return part(p, d); }).join("");
+      clock.setAttribute("datetime", d.toISOString());
+      clock.title = "Your local time";
+      clock.classList.toggle("dim", secs && !still() && d.getSeconds() % 2 === 1);
+    }
+    if (d.getMinutes() !== lastMinute) { lastMinute = d.getMinutes(); tick(); }
+    var t = Date.now();
+    clockTimer = setTimeout(render, secs ? 1000 - t % 1000 : 60000 - t % 60000);
+  }
+  function showSecs() { if (secsBtn) secsBtn.setAttribute("aria-pressed", String(secs)); }
+  if (secsBtn) secsBtn.addEventListener("click", function () {
+    secs = !secs;
+    save("enn:secs", secs ? null : "off");
+    showSecs();
+    clearTimeout(clockTimer);
+    render();
+  });
 
   // The globe turns for a few seconds and then rests, so nothing on the page moves for long (WCAG 2.2.2).
   function spin(el, ms) {
@@ -855,57 +931,82 @@ BASE_SCRIPT = """
     if (e.key === "Escape" && bar.classList.contains("open") && e.target.id !== "q") { menu(false); menuBtn.focus(); }
   });
 
-  // Light, dark and Orioni mode (after github.com/stijn/deluminator): the visitor's choice is remembered,
-  // otherwise the page follows the system; open tabs keep in step.
-  var themeBtn = $("#theme"), paperBtn = $("#paper"), chrome = $("#theme-color"), sys = window.matchMedia &&
-      matchMedia("(prefers-color-scheme: dark)");
+  // Auto, light, dark and Orioni mode (after github.com/stijn/deluminator and gov.eurth.org). Auto follows the
+  // device and is remembered by forgetting the choice; each click moves on: from auto it flips the page, then keeps
+  // the device's look even if the device changes, then returns to auto. Open tabs keep in step.
+  var themeBtn = $("#theme"), paperBtn = $("#paper"), chrome = $("#theme-color"), toastEl = $("#toast"),
+      sys = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  var NAMES = { auto: "auto, as your device is set", light: "light, always", dark: "dark, always" };
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function save(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
   function isPaper() { return root.hasAttribute("data-paper"); }
+  function device() { return sys && sys.matches ? "dark" : "light"; }
+  function mode() { var t = stored("enn:theme"); return t === "light" || t === "dark" ? t : "auto"; }
+  function after(m) { return m === "auto" ? (device() === "dark" ? "light" : "dark") : m === device() ? "auto" : device(); }
+  function toast(text) {
+    if (!toastEl) return;
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    clearTimeout(toastEl.hiding);
+    toastEl.hiding = setTimeout(function () { toastEl.classList.remove("show"); }, 4000);
+  }
   function paint(dark, paper) {
     root.setAttribute("data-theme", dark ? "dark" : "light");
     if (paper) root.setAttribute("data-paper", ""); else root.removeAttribute("data-paper");
     if (chrome) chrome.setAttribute("content", dark ? "@@DARK@@" : paper ? "@@PAPER@@" : "@@LIGHT@@");
-    themeBtn.setAttribute("aria-pressed", String(dark));
+    var m = mode(), label = "Theme: " + NAMES[m] + ". Switch to " + after(m) + ".";
+    themeBtn.setAttribute("aria-label", label);
+    themeBtn.title = label;
     if (paperBtn) paperBtn.setAttribute("aria-pressed", String(paper && !dark));
-    var icon = document.getElementById((dark ? "i-moon" : "i-sun") + (still() ? "-still" : ""));
+    var icon = document.getElementById("i-" + (m === "auto" ? "auto" : dark ? "moon" : "sun") + (still() ? "-still" : ""));
     $(".theme-icon", themeBtn).replaceChildren(icon.content.cloneNode(true));
   }
   // The new look grows out of the button that was pressed, or the old one shrinks into it.
+  var switching = null;
   function reveal(btn, e, grow, change) {
+    if (switching) switching.skipTransition();  // a quick second click finishes the first switch at once
     if (!document.startViewTransition || still()) { change(); return; }
     var r = btn.getBoundingClientRect(), x = e && e.clientX ? e.clientX : r.left + r.width / 2,
         y = e && e.clientY ? e.clientY : r.top + r.height / 2,
         far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
     root.classList.add(grow ? "vt-grow" : "vt-shrink");
-    var vt = document.startViewTransition(change);
+    var vt = switching = document.startViewTransition(change);
     vt.ready.then(function () {
       var dot = "circle(0px at " + x + "px " + y + "px)", all = "circle(" + far + "px at " + x + "px " + y + "px)";
+      // Hold the last frame: without it the old page shows again for a moment before the transition ends,
+      // a white flash when going dark.
       root.animate({ clipPath: grow ? [dot, all] : [all, dot] }, {
-        duration: 500, easing: grow ? "cubic-bezier(.25,.55,.45,1)" : "cubic-bezier(.55,0,.75,.45)",
+        duration: 500, easing: grow ? "cubic-bezier(.25,.55,.45,1)" : "cubic-bezier(.55,0,.75,.45)", fill: "forwards",
         pseudoElement: grow ? "::view-transition-new(root)" : "::view-transition-old(root)" });
     }).catch(function () {});
-    vt.finished.finally(function () { root.classList.remove("vt-grow", "vt-shrink"); });
+    vt.finished.finally(function () {
+      if (switching === vt) { switching = null; root.classList.remove("vt-grow", "vt-shrink"); }
+    });
   }
   themeBtn.addEventListener("click", function (e) {
-    var dark = !isDark();
-    save("enn:theme", dark ? "dark" : "light");
+    var m = after(mode()), dark = m === "auto" ? device() === "dark" : m === "dark";
+    save("enn:theme", m === "auto" ? null : m);
+    toast("Theme: " + NAMES[m] + ".");
+    if (dark === isDark()) { paint(dark, isPaper()); return; }
     reveal(themeBtn, e, !dark, function () { paint(dark, isPaper()); });
   });
   if (paperBtn) paperBtn.addEventListener("click", function (e) {
     var paper = !(isPaper() && !isDark());
     save("enn:paper", paper ? "1" : "0");
-    if (paper) save("enn:theme", "light");
+    if (paper && isDark()) save("enn:theme", "light");
+    toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
     reveal(paperBtn, e, paper, function () { paint(paper ? false : isDark(), paper); });
   });
-  if (sys && sys.addEventListener) sys.addEventListener("change", function (e) { if (!stored("enn:theme")) paint(e.matches, isPaper()); });
+  if (sys && sys.addEventListener) sys.addEventListener("change", function (e) { if (mode() === "auto") paint(e.matches, isPaper()); });
   addEventListener("storage", function (e) {
     if (e.key !== "enn:theme" && e.key !== "enn:paper") return;
     var t = stored("enn:theme");
     paint(t === "dark" || (!t && !!sys && sys.matches), stored("enn:paper") === "1");
   });
   paint(isDark(), isPaper());
+  showSecs();
+  render();
 
   // Stories rise into place as they scroll into view, a few at a time.
   var arrivals = root.classList.contains("anim") && "IntersectionObserver" in window && new IntersectionObserver(function (es) {
@@ -1172,6 +1273,9 @@ def head(title, card_title, description, url, image, base, extra=""):
         + (f"<meta property='og:image:alt' content='{esc(alt)}'>" if alt else "")
         + f"<meta name='twitter:card' content='summary_large_image'>"
         f"<meta name='twitter:site' content='@eurthnews'>"
+        f"<meta name='copyright' content='{esc(RIGHTS)}'>"
+        f"<meta name='tdm-reservation' content='1'>"
+        f"<meta name='robots' content='noai, noimageai'>"
         f"{extra}"
         f"<link rel='preconnect' href='https://fonts.googleapis.com'>"
         f"<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>"
@@ -1200,7 +1304,8 @@ def orb(base, size):
 def topbar(now, base=""):
     """The globe, today's date and (once the script runs) the reader's local time; RSS and the theme switch."""
     return (f"<div class='topbar'><div><a class='tap orb-link' href='{SITE}' aria-label='eurth.org'>{orb(base, 32)}</a>"
-            f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time></div>"
+            f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time>"
+            f"{SECONDS_BUTTON}</div>"
             f"<div><span>Updated <time datetime='{now.isoformat(timespec='seconds')}' data-rel>{now:%H:%M} "
             f"<abbr title='Coordinated Universal Time'>UTC</abbr></time></span>"
             f"<a class='tap' href='{base}news.rss'>RSS feed</a>{THEME_BUTTON}</div></div>")
@@ -1221,15 +1326,20 @@ def bar(base="", search=""):
 
 
 def footer(base=""):
+    links = "".join(f"<li><a href='{href}'><span class='n'>{esc(name)}</span><span class='d'>{esc(where)}</span></a></li>"
+                    for name, where, href in FOOTER_NAV)
     return (f"<footer class='sitefoot'><p class='title'>Eurth News Network</p>"
             f"<p>The newest stories from The Newsroom on eurth.org. Everything here is fiction, written by the members of "
             f"Eurth, the Worldbuilding &amp; Roleplay Writing Community; each story appears as its agency published it.</p>"
-            f"<p class='links'><a href='{base}news.rss'>RSS feed</a> · "
-            f"<a href='{SITE}/c/affairs/the-newsroom/36'>The Newsroom</a> · <a href='{SITE}'>eurth.org</a> · "
-            f"<a href='{SITE}/tos'>Terms</a></p>"
+            f"<nav class='elsewhere' aria-label='Eurth elsewhere'><ul>{links}"
+            f"<li><a href='{base}news.rss'><span class='n'>RSS feed</span><span class='d'>news.eurth.org</span></a></li>"
+            f"</ul></nav>"
             f"<p class='paper-row js-only'><button type='button' class='btn paper-btn' id='paper' aria-pressed='false' "
             f"aria-describedby='paper-note'>Orioni mode</button><span id='paper-note'>Newsprint paper, the way the "
-            f"Orioni press likes it.</span></p></footer>")
+            f"Orioni press likes it.</span></p>"
+            f"<p class='legal'>{esc(RIGHTS)} The stories are © their authors, the members of Eurth who posted them on "
+            f"eurth.org. Nothing here may be copied, republished or used for text and data mining or AI training "
+            f"without written permission.</p></footer>")
 
 
 def build_html(items):
@@ -1326,7 +1436,7 @@ def build_html(items):
         f"    <p class='sr' id='announce' aria-live='polite'></p>"
         f"  </article>"
         f"</div></dialog>"
-        f"{THEME_ICONS}"
+        f"<p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
         f"<script type='application/json' id='stories-data'>{data_json}</script>"
         f"{bodies}"
         f"<script>(function () {{{BASE_SCRIPT}{SCRIPT}}})();</script>"
@@ -1388,7 +1498,8 @@ def build_story(items, i):
         f"    <nav class='pager' aria-label='Newer and older stories'>{pager}</nav>"
         f"  </main>"
         f"  {footer(base)}"
-        f"</div>{THEME_ICONS}<script>(function () {{{BASE_SCRIPT}}})();</script></body></html>"
+        f"</div><p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
+        f"<script>(function () {{{BASE_SCRIPT}}})();</script></body></html>"
     )
 
 
@@ -1411,6 +1522,7 @@ def main():
         write(page + "index.html", build_story(items, i))
         write(page + "oembed.json", oembed(s["headline"], story_image(s), (s["nation"], f"{SITE}/u/{s['author']}")))
     write(f"{OUTDIR}/news.rss", build_rss(items))
+    write(f"{OUTDIR}/.well-known/tdmrep.json", json.dumps([{"location": "/", "tdm-reservation": 1}]))
     print(f"Updated {len(items)} stories -> {OUTDIR}/")
 
 

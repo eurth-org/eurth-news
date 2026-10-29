@@ -27,9 +27,9 @@ Three looks, remembered per visitor and otherwise following the system setting:
 - **Night**: the forum's Solarized dark.
 - **Orioni mode** (footer): warm newsprint parchment, in the spirit of the FT and De Tijd.
 
-The switch beside RSS works like [Deluminator](https://github.com/stijn/deluminator): the mode is set before the page paints, and the new look grows out of the button in a circle (View Transitions). Sun and moon icons are from [line-md](https://github.com/cyberalien/line-md) (MIT).
+The switch beside RSS works like [Deluminator](https://github.com/stijn/deluminator) and [Governmint](https://gov.eurth.org/): auto follows the device, and each click moves on (from auto it flips the page, then keeps the device's look, then returns to auto). The mode is set before the page paints, and the new look grows out of the button in a circle (View Transitions). Sun and moon icons are from [line-md](https://github.com/cyberalien/line-md) (MIT).
 
-Motion is small and finite: the masthead rule draws in, the lead settles, stories rise into place as they scroll in, Most read fills its meters, the clock rolls over on the minute, the globe turns for a few seconds and then rests (hover turns it again). Nothing runs for visitors who ask for reduced motion.
+Motion is small and finite: the masthead rule draws in, the lead settles, stories rise into place as they scroll in, Most read fills its meters, the clock runs to the second with its separators blinking as on a Mac (the button beside it stops both), the globe turns for a few seconds and then rests (hover turns it again). Nothing runs for visitors who ask for reduced motion.
 
 ## Accessibility
 
@@ -77,6 +77,6 @@ Each story page sets `discourse-username` to the posting nation, so the topic is
 
 The workflow handles everything: push to `main` (or `Run workflow` manually) builds and publishes the latest feed to GitHub Pages. Enable Pages with **Source: GitHub Actions** in the repo settings; `news.eurth.org` is set as the Pages custom domain.
 
-## License
+## Copyright
 
-MIT
+© 2026 Eurth. All rights reserved: no copying, republishing or text and data mining without written permission. The stories are © their authors, the members of Eurth who posted them on eurth.org. See [LICENSE](LICENSE). The site states the same in its footer, its RSS feed, a `copyright` meta tag, and a machine-readable text-and-data-mining reservation (`tdm-reservation` meta tag and `/.well-known/tdmrep.json`, the W3C TDMRep format).
