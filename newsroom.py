@@ -395,68 +395,346 @@ def build_rss(items):
 
 # --- Pages -------------------------------------------------------------------
 # Styled after the Eurth design system: forum light and Solarized night themes, plus "Orioni mode"
-# newsprint; Libre Baskerville for headlines, Helvetica for labels and text, JetBrains Mono for dates.
-# The page frame is Eurth's own (OOC); the stories inside keep their agencies' words, never their
-# branding. Built to WCAG 2.2 AAA: 7:1 text contrast in every theme and state, 44px targets, motion
-# that stops by itself and never runs for visitors who ask for reduced motion.
+# newsprint; Libre Baskerville for headlines, Helvetica for labels and text, JetBrains Mono for dates,
+# Font Awesome icons and line-md's animated sun and moon. The page frame is Eurth's own (OOC); the
+# stories inside keep their agencies' words, never their branding. Built to WCAG 2.2 AAA: 7:1 text
+# contrast in every theme and state (one named brand exception: white on Eurth blue for the call to
+# action, 3.2:1 at 19px bold), 44px targets, and a Pause motion switch for everything that moves on its
+# own; visitors who ask their device for reduced motion get it paused.
 
 FONTS = ("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400"
          "&family=JetBrains+Mono:wght@400;700&display=swap")
 
-MENU = [("Top stories", "top"), ("More stories", "more"), ("Most read", "most-read"), ("Nations", "nations")]
+# Font Awesome Free 6.5.2 by @fontawesome (icons CC BY 4.0, fontawesome.com/license/free), the forum's icon
+# set; each page carries them once, as a hidden sprite.
+FA = {
+    "arrow-left": ("0 0 448 512", 'M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2'
+            ' 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3'
+            's-32.8-12.5-45.3 0l-160 160z'),
+    "arrow-right": ("0 0 448 512", 'M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L3'
+            '38.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 4'
+            '5.3s32.8 12.5 45.3 0l160-160z'),
+    "bars": ("0 0 448 512", 'M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 2'
+            '56c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 41'
+            '6c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z'),
+    "bolt": ("0 0 448 512", 'M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.'
+            '7 288 64 288H175.5L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-2'
+            '2.9 8.9-35.3s-16.6-20.7-30-20.7H272.5L349.4 44.6z'),
+    "book": ("0 0 448 512", 'M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 '
+            '32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-3'
+            '2zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48'
+            'H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z'),
+    "book-open": ("0 0 576 512", 'M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 3'
+            '2 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 4'
+            '48 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6'
+            'c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-1'
+            '03.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z'),
+    "check": ("0 0 448 512", 'M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5'
+            '-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z'),
+    "circle-half-stroke": ("0 0 512 512", 'M448 256c0-106-86-192-192-192V448c106 0 192-86 192-192zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 '
+            '0 256z'),
+    "coins": ("0 0 512 512", 'M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137'
+            '.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-8'
+            '0S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 204.'
+            '9 384 221.7 384 240c0 4-.7 7.9-2.1 11.7c-4.6 13.2-17 25.3-35 35.5c0 0 0 0 0 0c-.1 .1-.3 .1-.4 .2'
+            'l0 0 0 0c-.3 .2-.6 .3-.9 .5c-35 19.4-90.8 32-153.6 32c-59.6 0-112.9-11.3-148.2-29.1c-1.9-.9-3.7-'
+            '1.9-5.5-2.9C14.3 274.6 0 258 0 240c0-34.8 53.4-64.5 128-75.4c10.5-1.5 21.4-2.7 32.7-3.5zM416 240'
+            'c0-21.9-10.6-39.9-24.1-53.4c28.3-4.4 54.2-11.4 76.2-20.5c16.3-6.8 31.5-15.2 43.9-25.5V176c0 19.3'
+            '-16.5 37.1-43.8 50.9c-14.6 7.4-32.4 13.7-52.4 18.5c.1-1.8 .2-3.5 .2-5.3zm-32 96c0 18-14.3 34.6-3'
+            '8.4 48c-1.8 1-3.6 1.9-5.5 2.9C304.9 404.7 251.6 416 192 416c-62.8 0-118.6-12.6-153.6-32C14.3 370'
+            '.6 0 354 0 336V300.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 342.6 135.8 352 192 352s108.6-9.4 148.1-'
+            '25.9c7.8-3.2 15.3-6.9 22.4-10.9c6.1-3.4 11.8-7.2 17.2-11.2c1.5-1.1 2.9-2.3 4.3-3.4V304v5.7V336zm'
+            '32 0V304 278.1c19-4.2 36.5-9.5 52.1-16c16.3-6.8 31.5-15.2 43.9-25.5V272c0 10.5-5 21-14.9 30.9c-1'
+            '6.3 16.3-45 29.7-81.3 38.4c.1-1.7 .2-3.5 .2-5.3zM192 448c56.2 0 108.6-9.4 148.1-25.9c16.3-6.8 31'
+            '.5-15.2 43.9-25.5V432c0 44.2-86 80-192 80S0 476.2 0 432V396.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4'
+            ' 438.6 135.8 448 192 448z'),
+    "comments": ("0 0 640 512", 'M208 352c114.9 0 208-78.8 208-176S322.9 0 208 0S0 78.8 0 176c0 38.6 14.7 74.3 39.6 103.4c-3.5 9.'
+            '4-8.7 17.7-14.2 24.7c-4.8 6.2-9.7 11-13.3 14.3c-1.8 1.6-3.3 2.9-4.3 3.7c-.5 .4-.9 .7-1.1 .8l-.2 '
+            '.2 0 0 0 0C1 327.2-1.4 334.4 .8 340.9S9.1 352 16 352c21.8 0 43.8-5.6 62.1-12.5c9.2-3.5 17.8-7.4 '
+            '25.3-11.4C134.1 343.3 169.8 352 208 352zM448 176c0 112.3-99.1 196.9-216.5 207C255.8 457.4 336.4 '
+            '512 432 512c38.2 0 73.9-8.7 104.7-23.9c7.5 4 16 7.9 25.2 11.4c18.3 6.9 40.3 12.5 62.1 12.5c6.9 0'
+            ' 13.1-4.5 15.2-11.1c2.1-6.6-.2-13.8-5.8-17.9l0 0 0 0-.2-.2c-.2-.2-.6-.4-1.1-.8c-1-.8-2.5-2-4.3-3'
+            '.7c-3.6-3.3-8.5-8.1-13.3-14.3c-5.5-7-10.7-15.4-14.2-24.7c24.9-29 39.6-64.7 39.6-103.4c0-92.8-84.'
+            '9-168.9-192.6-175.5c.4 5.1 .6 10.3 .6 15.5z'),
+    "file-lines": ("0 0 384 512", 'M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14'
+            '.3-32-32V0H64zM256 0V128H384L256 0zM112 256H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7'
+            '.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 '
+            '16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z'),
+    "fire-flame-curved": ("0 0 384 512", 'M153.6 29.9l16-21.3C173.6 3.2 180 0 186.7 0C198.4 0 208 9.6 208 21.3V43.5c0 13.1 5.4 25.7 14.9 3'
+            '4.7L307.6 159C356.4 205.6 384 270.2 384 337.7C384 434 306 512 209.7 512H192C86 512 0 426 0 320v-'
+            '3.8c0-48.8 19.4-95.6 53.9-130.1l3.5-3.5c4.2-4.2 10-6.6 16-6.6C85.9 176 96 186.1 96 198.6V288c0 3'
+            '5.3 28.7 64 64 64s64-28.7 64-64v-3.9c0-18-7.2-35.3-19.9-48l-38.6-38.6c-24-24-37.5-56.7-37.5-90.7'
+            'c0-27.7 9-54.8 25.6-76.9z'),
+    "flag": ("0 0 448 512", 'M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V64 368 480c0 17.7 14.3 32 32 32s32-14.3 32-32V352l64.3-16'
+            '.1c41.1-10.3 84.6-5.5 122.5 13.4c44.2 22.1 95.5 24.8 141.7 7.4l34.7-13c12.5-4.7 20.8-16.6 20.8-3'
+            '0V66.1c0-23-24.2-38-44.8-27.7l-9.6 4.8c-46.3 23.2-100.8 23.2-147.1 0c-35.1-17.6-75.4-22-113.5-12'
+            '.5L64 48V32z'),
+    "flask": ("0 0 448 512", 'M288 0H160 128C110.3 0 96 14.3 96 32s14.3 32 32 32V196.8c0 11.8-3.3 23.5-9.5 33.5L10.3 406.2C3.6'
+            ' 417.2 0 429.7 0 442.6C0 480.9 31.1 512 69.4 512H378.6c38.3 0 69.4-31.1 69.4-69.4c0-12.8-3.6-25.'
+            '4-10.3-36.4L329.5 230.4c-6.2-10.1-9.5-21.7-9.5-33.5V64c17.7 0 32-14.3 32-32s-14.3-32-32-32H288zM'
+            '192 196.8V64h64V196.8c0 23.7 6.6 46.9 19 67.1L309.5 320h-171L173 263.9c12.4-20.2 19-43.4 19-67.1'
+            'z'),
+    "globe": ("0 0 512 512", 'M352 256c0 22.2-1.2 43.6-3.3 64H163.3c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64H348.7c2.2 20.4 3'
+            '.3 41.8 3.3 64zm28.8-64H503.9c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.'
+            '2-64s-1.1-43.4-3.2-64zm112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6c78.3 20.7 142 77.5 171.9 15'
+            '1.6zm-149.1 0H167.7c6.1-36.4 15.5-68.6 27-94.7c10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 2'
+            '56 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5c11.6 26 20.9 58.2 27 94.7zm-209 0H18.6C48.6 '
+            '85.9 112.2 29.1 190.6 8.4C165.1 42.6 145.3 96.1 135.3 160zM8.1 192H131.2c-2.1 20.6-3.2 42-3.2 64'
+            's1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zM194.7 446.6c-11.6-26-20.9-58.2-27-'
+            '94.6H344.3c-6.1 36.4-15.5 68.6-27 94.6c-10.5 23.6-22.2 40.7-33.5 51.5C272.6 508.8 263.3 512 256 '
+            '512s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6C11'
+            '2.2 482.9 48.6 426.1 18.6 352H135.3zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6c25.5-34.2 45.2-87.7'
+            ' 55.3-151.6H493.4z'),
+    "handshake": ("0 0 640 512", 'M323.4 85.2l-96.8 78.4c-16.1 13-19.2 36.4-7 53.1c12.9 17.8 38 21.3 55.3 7.8l99.3-77.2c7-5.4 17-4'
+            '.2 22.5 2.8s4.2 17-2.8 22.5l-20.9 16.2L512 316.8V128h-.7l-3.9-2.5L434.8 79c-15.3-9.8-33.2-15-51.'
+            '4-15c-21.8 0-43 7.5-60 21.2zm22.8 124.4l-51.7 40.2C263 274.4 217.3 268 193.7 235.6c-22.2-30.5-16'
+            '.6-73.1 12.7-96.8l83.2-67.3c-11.6-4.9-24.1-7.4-36.8-7.4C234 64 215.7 69.6 200 80l-72 48V352h28.2'
+            'l91.4 83.4c19.6 17.9 49.9 16.5 67.8-3.1c5.5-6.1 9.2-13.2 11.1-20.6l17 15.6c19.5 17.9 49.9 16.6 6'
+            '7.8-2.9c4.5-4.9 7.8-10.6 9.9-16.5c19.4 13 45.8 10.3 62.1-7.5c17.9-19.5 16.6-49.9-2.9-67.8l-134.2'
+            '-123zM16 128c-8.8 0-16 7.2-16 16V352c0 17.7 14.3 32 32 32H64c17.7 0 32-14.3 32-32V128H16zM48 320'
+            'a16 16 0 1 1 0 32 16 16 0 1 1 0-32zM544 128V352c0 17.7 14.3 32 32 32h32c17.7 0 32-14.3 32-32V144'
+            'c0-8.8-7.2-16-16-16H544zm32 208a16 16 0 1 1 32 0 16 16 0 1 1 -32 0z'),
+    "heart-pulse": ("0 0 512 512", 'M228.3 469.1L47.6 300.4c-4.2-3.9-8.2-8.1-11.9-12.4h87c22.6 0 43-13.6 51.7-34.5l10.5-25.2 49.3 10'
+            '9.5c3.8 8.5 12.1 14 21.4 14.1s17.8-5 22-13.3L320 253.7l1.7 3.4c9.5 19 28.9 31 50.1 31H476.3c-3.7'
+            ' 4.3-7.7 8.5-11.9 12.4L283.7 469.1c-7.5 7-17.4 10.9-27.7 10.9s-20.2-3.9-27.7-10.9zM503.7 240h-13'
+            '2c-3 0-5.8-1.7-7.2-4.4l-23.2-46.3c-4.1-8.1-12.4-13.3-21.5-13.3s-17.4 5.1-21.5 13.3l-41.4 82.8L20'
+            '5.9 158.2c-3.9-8.7-12.7-14.3-22.2-14.1s-18.1 5.9-21.8 14.8l-31.8 76.3c-1.2 3-4.2 4.9-7.4 4.9H16c'
+            '-2.6 0-5 .4-7.3 1.1C3 225.2 0 208.2 0 190.9v-5.8c0-69.9 50.5-129.5 119.4-141C165 36.5 211.4 51.4'
+            ' 244 84l12 12 12-12c32.6-32.6 79-47.5 124.6-39.9C461.5 55.6 512 115.2 512 185.1v5.8c0 16.9-2.8 3'
+            '3.5-8.3 49.1z'),
+    "landmark": ("0 0 512 512", 'M240.1 4.2c9.8-5.6 21.9-5.6 31.8 0l171.8 98.1L448 104l0 .9 47.9 27.4c12.6 7.2 18.8 22 15.1 36s-1'
+            '6.4 23.8-30.9 23.8H32c-14.5 0-27.2-9.8-30.9-23.8s2.5-28.8 15.1-36L64 104.9V104l4.4-1.6L240.1 4.2'
+            'zM64 224h64V416h40V224h64V416h48V224h64V416h40V224h64V420.3c.6 .3 1.2 .7 1.8 1.1l48 32c11.7 7.8 '
+            '17 22.4 12.9 35.9S494.1 512 480 512H32c-14.1 0-26.5-9.2-30.6-22.7s1.1-28.1 12.9-35.9l48-32c.6-.4'
+            ' 1.2-.7 1.8-1.1V224z'),
+    "layer-group": ("0 0 576 512", 'M264.5 5.2c14.9-6.9 32.1-6.9 47 0l218.6 101c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218'
+            '.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 149.8C37.4 145.8 32 137.3 32 128s5.4-17.9 13.9-21.8L264.5 5.'
+            '2zM476.9 209.6l53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32'
+            '.1 6.9-47 0L45.9 277.8C37.4 273.8 32 265.3 32 256s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.'
+            '8 50.4 10.8 73.8 0l152-70.2zm-152 198.2l152-70.2 53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9'
+            '-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 405.8C37.4 401.8 32 393.3 32 384s5.4-17.9 13.'
+            '9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0z'),
+    "link": ("0 0 640 512", 'M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30'
+            '.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422'
+            '.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.'
+            '4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 '
+            '267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7'
+            '-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289'
+            '.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 3'
+            '4.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L6'
+            '0.2 244.3z'),
+    "magnifying-glass": ("0 0 512 512", 'M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.'
+            '7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a'
+            '144 144 0 1 0 0-288 144 144 0 1 0 0 288z'),
+    "map": ("0 0 576 512", 'M384 476.1L192 421.2V35.9L384 90.8V476.1zm32-1.2V88.4L543.1 37.5c15.8-6.3 32.9 5.3 32.9 22.3V394'
+            '.6c0 9.8-6 18.6-15.1 22.3L416 474.8zM15.1 95.1L160 37.2V423.6L32.9 474.5C17.1 480.8 0 469.2 0 45'
+            '2.2V117.4c0-9.8 6-18.6 15.1-22.3z'),
+    "masks-theater": ("0 0 640 512", 'M74.6 373.2c41.7 36.1 108 82.5 166.1 73.7c6.1-.9 12.1-2.5 18-4.5c-9.2-12.3-17.3-24.4-24.2-35.4c-'
+            '21.9-35-28.8-75.2-25.9-113.6c-20.6 4.1-39.2 13-54.7 25.4c-6.5 5.2-16.3 1.3-14.8-7c6.4-33.5 33-60'
+            '.9 68.2-66.3c2.6-.4 5.3-.7 7.9-.8l19.4-131.3c2-13.8 8-32.7 25-45.9C278.2 53.2 310.5 37 363.2 32.'
+            '2c-.8-.7-1.6-1.4-2.4-2.1C340.6 14.5 288.4-11.5 175.7 5.6S20.5 63 5.7 83.9C0 91.9-.8 102 .6 111.8'
+            'L24.8 276.1c5.5 37.3 21.5 72.6 49.8 97.2zm87.7-219.6c4.4-3.1 10.8-2 11.8 3.3c.1 .5 .2 1.1 .3 1.6'
+            'c3.2 21.8-11.6 42-33.1 45.3s-41.5-11.8-44.7-33.5c-.1-.5-.1-1.1-.2-1.6c-.6-5.4 5.2-8.4 10.3-6.7c9'
+            ' 3 18.8 3.9 28.7 2.4s19.1-5.3 26.8-10.8zM261.6 390c29.4 46.9 79.5 110.9 137.6 119.7s124.5-37.5 1'
+            '66.1-73.7c28.3-24.5 44.3-59.8 49.8-97.2l24.2-164.3c1.4-9.8 .6-19.9-5.1-27.9c-14.8-20.9-57.3-61.2'
+            '-170-78.3S299.4 77.2 279.2 92.8c-7.8 6-11.5 15.4-12.9 25.2L242.1 282.3c-5.5 37.3-.4 75.8 19.6 10'
+            '7.7zM404.5 235.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5.1 1.7-10.9-1.3-10.3-6.7c.1-.5 '
+            '.1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.1 .5-.2 1.1-.3 1.6c-1 5.3-7.4 6'
+            '.4-11.8 3.3zm136.2 15.5c-1 5.3-7.4 6.4-11.8 3.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5'
+            '.1 1.7-10.9-1.3-10.3-6.7c.1-.5 .1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.'
+            '1 .5-.2 1.1-.3 1.6zM530 350.2c-19.6 44.7-66.8 72.5-116.8 64.9s-87.1-48.2-93-96.7c-1-8.3 8.9-12.1'
+            ' 15.2-6.7c23.9 20.8 53.6 35.3 87 40.3s66.1 .1 94.9-12.8c7.6-3.4 16 3.2 12.6 10.9z'),
+    "newspaper": ("0 0 512 512", 'M96 96c0-35.3 28.7-64 64-64H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H80c-44.2 0-80-35.8'
+            '-80-80V128c0-17.7 14.3-32 32-32s32 14.3 32 32V400c0 8.8 7.2 16 16 16s16-7.2 16-16V96zm64 24v80c0'
+            ' 13.3 10.7 24 24 24H296c13.3 0 24-10.7 24-24V120c0-13.3-10.7-24-24-24H184c-13.3 0-24 10.7-24 24z'
+            'm208-8c0 8.8 7.2 16 16 16h48c8.8 0 16-7.2 16-16s-7.2-16-16-16H384c-8.8 0-16 7.2-16 16zm0 96c0 8.'
+            '8 7.2 16 16 16h48c8.8 0 16-7.2 16-16s-7.2-16-16-16H384c-8.8 0-16 7.2-16 16zM160 304c0 8.8 7.2 16'
+            ' 16 16H432c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16zm0 96c0 8.8 7.2 16 16 16H432'
+            'c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16z'),
+    "pause": ("0 0 320 512", 'M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-'
+            '48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.'
+            '5-21.5-48-48-48H240z'),
+    "play": ("0 0 384 512", 'M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361'
+            ' 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z'),
+    "rss": ("0 0 448 512", 'M0 64C0 46.3 14.3 32 32 32c229.8 0 416 186.2 416 416c0 17.7-14.3 32-32 32s-32-14.3-32-32C384 253'
+            '.6 226.4 96 32 96C14.3 96 0 81.7 0 64zM0 416a64 64 0 1 1 128 0A64 64 0 1 1 0 416zM32 160c159.1 0'
+            ' 288 128.9 288 288c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-123.7-100.3-224-224-224c-17.7 0-32-14.3'
+            '-32-32s14.3-32 32-32z'),
+    "shield-halved": ("0 0 512 512", 'M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c'
+            '-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 '
+            '1 251.4 0 256 0zm0 66.8V444.8C394 378 431.1 230.1 432 141.4L256 66.8l0 0z'),
+    "xmark": ("0 0 384 512", 'M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-1'
+            '2.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L1'
+            '92 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z'),
+}
+SPRITE = ("<svg aria-hidden='true' focusable='false' style='position:absolute;width:0;height:0;overflow:hidden'>"
+          + "".join(f"<symbol id='fa-{n}' viewBox='{vb}'><path d='{d}'/></symbol>" for n, (vb, d) in FA.items())
+          + "</svg>")
 
-ICONS = (  # Font Awesome "bars" and "xmark", the forum's icon set
-    "<svg class='i-bars' viewBox='0 0 448 512' aria-hidden='true'><path d='M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 "
-    "14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 "
-    "32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 "
-    "32 32z'/></svg>"
-    "<svg class='i-close' viewBox='0 0 384 512' aria-hidden='true'><path d='M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8"
-    "-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 "
-    "32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 "
-    "150.6z'/></svg>"
+
+def icon(name, cls="i"):
+    return f"<svg class='{cls}' aria-hidden='true' focusable='false'><use href='#fa-{name}'/></svg>"
+
+
+MENU = [("Top stories", "top", "newspaper"), ("More stories", "more", "layer-group"),
+        ("Most read", "most-read", "fire-flame-curved"), ("Nations", "nations", "flag")]
+
+# Sun, moon and auto from line-md by Vjacheslav Trushkin (MIT), as in Deluminator and on gov.eurth.org:
+# switching morphs one into the other, then the sun's rays turn and the stars twinkle. The "-still" versions
+# are for Pause motion and reduced motion.
+LINE_MD = (
+    # light-dark-loop
+    '<template id=\'i-auto\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" v'
+    'iewBox="0 0 24 24"><defs><mask id="SVGPWNvGc7L"><circle cx="7.5" cy="7.5" r="5.5" fill="#fff"/><circ'
+    'le cx="11" cy="7.5" r="6.5"><animate fill="freeze" attributeName="cx" dur="0.4s" values="7.5;11"/><a'
+    'nimate fill="freeze" attributeName="r" dur="0.4s" values="5.5;6.5"/></circle></mask><mask id="SVGE5i'
+    'ORxWn"><g fill="#fff"><circle cx="12" cy="9" r="5.5" transform="rotate(-45 12 12)"><animate fill="fr'
+    'eeze" attributeName="cy" begin="0.9s" dur="0.5s" to="15"/></circle><path d="M12.62 20.62h3l-1.5 2.5Z'
+    '" opacity="0"><animateTransform attributeName="transform" dur="5s" repeatCount="indefinite" type="ro'
+    'tate" values="-145 14.12 14.12;-95 14.12 14.12"/><set fill="freeze" attributeName="opacity" begin="1'
+    '.4s" to="1"/><animate fill="freeze" attributeName="d" begin="1.4s" dur="0.4s" values="M13.12 17.12h2'
+    'l-1 2Z;M12.62 20.62h3l-1.5 2.5Z"/></path><path d="M12.62 20.62h3l-1.5 2.5Z" opacity="0"><animateTran'
+    'sform attributeName="transform" dur="5s" repeatCount="indefinite" type="rotate" values="-95 14.12 14'
+    '.12;-45 14.12 14.12"/><set fill="freeze" attributeName="opacity" begin="1.4s" to="1"/><animate fill='
+    '"freeze" attributeName="d" begin="1.4s" dur="0.4s" values="M13.12 17.12h2l-1 2Z;M12.62 20.62h3l-1.5 '
+    '2.5Z"/></path><path d="M12.62 20.62h3l-1.5 2.5Z" opacity="0"><animateTransform attributeName="transf'
+    'orm" dur="5s" repeatCount="indefinite" type="rotate" values="-45 14.12 14.12;5 14.12 14.12"/><set fi'
+    'll="freeze" attributeName="opacity" begin="1.4s" to="1"/><animate fill="freeze" attributeName="d" be'
+    'gin="1.4s" dur="0.4s" values="M13.12 17.12h2l-1 2Z;M12.62 20.62h3l-1.5 2.5Z"/></path><path d="M12.62'
+    ' 20.62h3l-1.5 2.5Z" opacity="0"><animateTransform attributeName="transform" dur="5s" repeatCount="in'
+    'definite" type="rotate" values="5 14.12 14.12;55 14.12 14.12"/><set fill="freeze" attributeName="opa'
+    'city" begin="1.4s" to="1"/><animate fill="freeze" attributeName="d" begin="1.4s" dur="0.4s" values="'
+    'M13.12 17.12h2l-1 2Z;M12.62 20.62h3l-1.5 2.5Z"/></path></g><path d="M-4.97 12l18.38 -18.38l10.61 10.'
+    '61l-18.38 18.38Z"/></mask></defs><g fill="currentColor"><path d="M0 0h24v24H0z" mask="url(#SVGPWNvGc'
+    '7L)"/><path d="M0 0h24v24H0z" mask="url(#SVGE5iORxWn)"/></g><path fill="none" stroke="currentColor" '
+    'stroke-dasharray="24" stroke-dashoffset="24" stroke-linecap="round" stroke-linejoin="round" stroke-w'
+    'idth="2" d="M22 12h-22" transform="rotate(-45 12 12)"><animate attributeName="d" dur="5s" keyTimes="'
+    '0;0.5;1" repeatCount="indefinite" values="M22 12h-22;M24 12h-22;M22 12h-22"/><animate fill="freeze" '
+    'attributeName="stroke-dashoffset" begin="0.5s" dur="0.3s" to="0"/></path></svg></template>'
+    # sunny-loop
+    '<template id=\'i-sun\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" vi'
+    'ewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round'
+    '" stroke-width="2"><path stroke-dasharray="34" d="M12 7c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5c-2.76 '
+    '0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur'
+    '="0.4s" values="34;0"/></path><path d="M12 21v1M21 12h1M12 3v-1M3 12h-1" opacity="0"><animateTransfo'
+    'rm attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12'
+    ' 12"/><set fill="freeze" attributeName="opacity" begin="0.5s" to="1"/><animate fill="freeze" attribu'
+    'teName="d" begin="0.5s" dur="0.2s" values="M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1'
+    'M3 12h-1"/></path><path d="M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"'
+    ' opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="ro'
+    'tate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.7s" to="1"/><a'
+    'nimate fill="freeze" attributeName="d" begin="0.7s" dur="0.2s" values="M17 17l0.5 0.5M17 7l0.5 -0.5M'
+    '7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5'
+    '"/></path></g></svg></template>'
+    # moon-loop
+    '<template id=\'i-moon\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" v'
+    'iewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-dasharray="56" stroke-linecap="rou'
+    'nd" stroke-linejoin="round" stroke-width="2" d="M7 6c0 6.08 4.92 11 11 11c0.53 0 1.05 -0.04 1.56 -0.'
+    '11c-1.61 2.47 -4.39 4.11 -7.56 4.11c-4.97 0 -9 -4.03 -9 -9c0 -3.17 1.64 -5.95 4.11 -7.56c-0.07 0.51 '
+    '-0.11 1.03 -0.11 1.56Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="'
+    '56;0"/></path><g fill="currentColor"><path d="M15.22 6.03l2.53 -1.94l-3.19 -0.09l-1.06 -3l-1.06 3l-3'
+    '.19 0.09l2.53 1.94l-0.91 3.06l2.63 -1.81l2.63 1.81l-0.91 -3.06Z" opacity="0"><animate attributeName='
+    '"opacity" begin="0.7s" dur="6s" keyTimes="0;0.1;0.4;0.5;1" repeatCount="indefinite" values="0;1;1;0;'
+    '0"/></path><path d="M19.61 12.25l1.64 -1.25l-2.06 -0.05l-0.69 -1.95l-0.69 1.95l-2.06 0.05l1.64 1.25l'
+    '-0.59 1.98l1.7 -1.17l1.7 1.17l-0.59 -1.98Z" opacity="0"><animate attributeName="opacity" begin="0.7s'
+    '" dur="6s" keyTimes="0;0.2;0.3;0.6;0.7;1" repeatCount="indefinite" values="0;0;1;1;0;0"/></path><pat'
+    'h d="M13.61 5.25l1.64 -1.25l-2.06 -0.05l-0.69 -1.95l-0.69 1.95l-2.06 0.05l1.64 1.25l-0.59 1.98l1.7 -'
+    '1.17l1.7 1.17Z" opacity="0"><animate attributeName="opacity" begin="3.7s" dur="6s" keyTimes="0;0.1;0'
+    '.4;0.5;1" repeatCount="indefinite" values="0;1;1;0;0"/></path><path d="M20.83 9.73l1.88 -1.44l-2.37 '
+    '-0.07l-0.79 -2.22l-0.79 2.23l-2.37 0.07l1.88 1.44l-0.68 2.27l1.95 -1.34l1.95 1.34Z" opacity="0"><ani'
+    'mate attributeName="opacity" begin="3.7s" dur="6s" keyTimes="0;0.2;0.3;0.6;0.7;1" repeatCount="indef'
+    'inite" values="0;0;1;1;0;0"/></path></g></svg></template>'
+    # sunny-outline-to-moon-loop-transition
+    '<template id=\'i-to-dark\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false'
+    '" viewBox="0 0 24 24"><defs><mask id="SVGHXYFDcmX"><path fill="#fff" d="M12 2c5.52 0 10 4.48 10 10c0'
+    ' 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52 4.48 -10 10 -10Z"><animate fill="freeze" att'
+    'ributeName="d" dur="0.4s" values="M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6'
+    'c0 -3.31 2.69 -6 6 -6Z;M12 2c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0'
+    ' -5.52 4.48 -10 10 -10Z"/><set fill="freeze" attributeName="opacity" begin="0.4s" to="0"/></path><pa'
+    'th d="M18 -4c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52 4.48 -10 '
+    '10 -10ZM12 4c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 -3.58 -8 -8c0 -4.42 3.58 -8 8 -8Z"><an'
+    'imate fill="freeze" attributeName="d" dur="0.4s" values="M22 -4c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 '
+    '6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6ZM12 8c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4c-2.21 0 -4'
+    ' -1.79 -4 -4c0 -2.21 1.79 -4 4 -4Z;M18 -4c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4'
+    '.48 -10 -10c0 -5.52 4.48 -10 10 -10ZM12 4c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 -3.58 -8 '
+    '-8c0 -4.42 3.58 -8 8 -8Z"/><set fill="freeze" attributeName="opacity" begin="0.4s" to="0"/></path></'
+    'mask><mask id="SVGYzLhkdyh"><path fill="#fff" d="M18 -6c6.62 0 12 5.38 12 12c0 6.62 -5.38 12 -12 12c'
+    '-6.62 0 -12 -5.38 -12 -12c0 -6.62 5.38 -12 12 -12Z"><animate fill="freeze" attributeName="d" dur="0.'
+    '4s" values="M22 -6c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 -3.58 -8 -8c0 -4.42 3.58 -8 8 -8'
+    'Z;M18 -6c6.62 0 12 5.38 12 12c0 6.62 -5.38 12 -12 12c-6.62 0 -12 -5.38 -12 -12c0 -6.62 5.38 -12 12 -'
+    '12Z"/><set fill="freeze" attributeName="opacity" begin="0.4s" to="0"/></path><path d="M18 -4c5.52 0 '
+    '10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52 4.48 -10 10 -10ZM2 12v-20h30v'
+    '30h-20c5.52 0 10 -4.48 10 -10c0 -5.52 -4.48 -10 -10 -10c-5.52 0 -10 4.48 -10 10Z"><animate fill="fre'
+    'eze" attributeName="d" dur="0.4s" values="M22 -4c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2'
+    '.69 -6 -6c0 -3.31 2.69 -6 6 -6ZM6 12v-20h26v26h-20c3.31 0 6 -2.69 6 -6c0 -3.31 -2.69 -6 -6 -6c-3.31 '
+    '0 -6 2.69 -6 6Z;M18 -4c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52'
+    ' 4.48 -10 10 -10ZM2 12v-20h30v30h-20c5.52 0 10 -4.48 10 -10c0 -5.52 -4.48 -10 -10 -10c-5.52 0 -10 4.'
+    '48 -10 10Z"/><set fill="freeze" attributeName="opacity" begin="0.4s" to="0"/></path></mask></defs><p'
+    'ath fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2'
+    '" d="M12 21v1M21 12h1M12 3v-1M3 12h-1M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5'
+    'l-0.5 0.5"><animate fill="freeze" attributeName="opacity" dur="0.4s" values="1;0"/></path><g fill="c'
+    'urrentColor"><path d="M0 0h24v24H0z" mask="url(#SVGHXYFDcmX)"/><path d="M0 0h24v24H0z" mask="url(#SV'
+    'GYzLhkdyh)"/></g><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="rou'
+    'nd" stroke-width="2" d="M7 6c0 6.08 4.92 11 11 11c0.53 0 1.05 -0.04 1.56 -0.11c-1.61 2.47 -4.39 4.11'
+    ' -7.56 4.11c-4.97 0 -9 -4.03 -9 -9c0 -3.17 1.64 -5.95 4.11 -7.56c-0.07 0.51 -0.11 1.03 -0.11 1.56Z" '
+    'opacity="0"><set fill="freeze" attributeName="opacity" begin="0.4s" to="1"/></path><g fill="currentC'
+    'olor"><path d="M15.22 6.03l2.53 -1.94l-3.19 -0.09l-1.06 -3l-1.06 3l-3.19 0.09l2.53 1.94l-0.91 3.06l2'
+    '.63 -1.81l2.63 1.81l-0.91 -3.06Z" opacity="0"><animate attributeName="opacity" begin="0.4s" dur="6s"'
+    ' keyTimes="0;0.1;0.4;0.5;1" repeatCount="indefinite" values="0;1;1;0;0"/></path><path d="M19.61 12.2'
+    '5l1.64 -1.25l-2.06 -0.05l-0.69 -1.95l-0.69 1.95l-2.06 0.05l1.64 1.25l-0.59 1.98l1.7 -1.17l1.7 1.17l-'
+    '0.59 -1.98Z" opacity="0"><animate attributeName="opacity" begin="0.4s" dur="6s" keyTimes="0;0.2;0.3;'
+    '0.6;0.7;1" repeatCount="indefinite" values="0;0;1;1;0;0"/></path><path d="M13.61 5.25l1.64 -1.25l-2.'
+    '06 -0.05l-0.69 -1.95l-0.69 1.95l-2.06 0.05l1.64 1.25l-0.59 1.98l1.7 -1.17l1.7 1.17Z" opacity="0"><an'
+    'imate attributeName="opacity" begin="3.4s" dur="6s" keyTimes="0;0.1;0.4;0.5;1" repeatCount="indefini'
+    'te" values="0;1;1;0;0"/></path><path d="M20.83 9.73l1.88 -1.44l-2.37 -0.07l-0.79 -2.22l-0.79 2.23l-2'
+    '.37 0.07l1.88 1.44l-0.68 2.27l1.95 -1.34l1.95 1.34Z" opacity="0"><animate attributeName="opacity" be'
+    'gin="3.4s" dur="6s" keyTimes="0;0.2;0.3;0.6;0.7;1" repeatCount="indefinite" values="0;0;1;1;0;0"/></'
+    'path></g></svg></template>'
+    # moon-to-sunny-outline-loop-transition
+    '<template id=\'i-to-light\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="fals'
+    'e" viewBox="0 0 24 24"><defs><mask id="SVGUXuaaerw"><path fill="#fff" d="M12 6c3.31 0 6 2.69 6 6c0 3'
+    '.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"><animate fill="freeze" attributeName='
+    '"d" dur="0.4s" values="M12 2c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0'
+    ' -5.52 4.48 -10 10 -10Z;M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2'
+    '.69 -6 6 -6Z"/></path><path d="M22 -4c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0'
+    ' -3.31 2.69 -6 6 -6Z"><animate fill="freeze" attributeName="d" dur="0.4s" values="M18 -4c5.52 0 10 4'
+    '.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52 4.48 -10 10 -10Z;M22 -4c3.31 0 6 '
+    '2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"/><set fill="freeze" attri'
+    'buteName="opacity" begin="0.4s" to="0"/></path><path d="M12 8c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4c'
+    '-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4Z"><animate fill="freeze" attributeName="d" dur="0.4s" va'
+    'lues="M12 4c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 -3.58 -8 -8c0 -4.42 3.58 -8 8 -8Z;M12 8'
+    'c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4c-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4Z"/></path></mask>'
+    '<mask id="SVGjqg97bFZ"><path fill="#fff" d="M22 -6c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 '
+    '-3.58 -8 -8c0 -4.42 3.58 -8 8 -8Z"><animate fill="freeze" attributeName="d" dur="0.4s" values="M18 -'
+    '6c6.62 0 12 5.38 12 12c0 6.62 -5.38 12 -12 12c-6.62 0 -12 -5.38 -12 -12c0 -6.62 5.38 -12 12 -12Z;M22'
+    ' -6c4.42 0 8 3.58 8 8c0 4.42 -3.58 8 -8 8c-4.42 0 -8 -3.58 -8 -8c0 -4.42 3.58 -8 8 -8Z"/><set fill="'
+    'freeze" attributeName="opacity" begin="0.4s" to="0"/></path><path d="M22 -4c3.31 0 6 2.69 6 6c0 3.31'
+    ' -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6ZM6 12v-20h26v26h-20c3.31 0 6 -2.69 6 -6c0 '
+    '-3.31 -2.69 -6 -6 -6c-3.31 0 -6 2.69 -6 6Z"><animate fill="freeze" attributeName="d" dur="0.4s" valu'
+    'es="M18 -4c5.52 0 10 4.48 10 10c0 5.52 -4.48 10 -10 10c-5.52 0 -10 -4.48 -10 -10c0 -5.52 4.48 -10 10'
+    ' -10ZM2 12v-20h30v30h-20c5.52 0 10 -4.48 10 -10c0 -5.52 -4.48 -10 -10 -10c-5.52 0 -10 4.48 -10 10Z;M'
+    '22 -4c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6ZM6 12v-20h26'
+    'v26h-20c3.31 0 6 -2.69 6 -6c0 -3.31 -2.69 -6 -6 -6c-3.31 0 -6 2.69 -6 6Z"/><set fill="freeze" attrib'
+    'uteName="opacity" begin="0.4s" to="0"/></path></mask></defs><g fill="currentColor"><path d="M0 0h24v'
+    '24H0z" mask="url(#SVGUXuaaerw)"/><path d="M0 0h24v24H0z" mask="url(#SVGjqg97bFZ)"/></g><g fill="none'
+    '" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12'
+    ' 21v1M21 12h1M12 3v-1M3 12h-1" opacity="0"><animateTransform attributeName="transform" dur="30s" rep'
+    'eatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="op'
+    'acity" begin="0.4s" to="1"/><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" values='
+    '"M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1M3 12h-1"/></path><path d="M18.5 18.5l0.5 '
+    '0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5" opacity="0"><animateTransform attributeNa'
+    'me="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fil'
+    'l="freeze" attributeName="opacity" begin="0.6s" to="1"/><animate fill="freeze" attributeName="d" beg'
+    'in="0.6s" dur="0.2s" values="M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5'
+    ' 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"/></path></g></svg></template>'
 )
-
-# Sun and moon from line-md by Vjacheslav Trushkin (MIT), as in Deluminator: they draw themselves once
-# per switch (no endless spinning or twinkling); the "-still" versions are for reduced motion.
 CRESCENT = ("M7 6 C7 12.08 11.92 17 18 17 C18.53 17 19.05 16.96 19.56 16.89 C17.95 19.36 15.17 21 12 21 "
             "C7.03 21 3 16.97 3 12 C3 8.83 4.64 6.05 7.11 4.44 C7.04 4.95 7 5.47 7 6 Z")
 STARS = ("m15.22 6.03l2.53-1.94L14.56 4L13.5 1l-1.06 3l-3.19.09l2.53 1.94l-.91 3.06l2.63-1.81l2.63 1.81z",
          "M19.61 12.25L21.25 11l-2.06-.05L18.5 9l-.69 1.95l-2.06.05l1.64 1.25l-.59 1.98l1.7-1.17l1.7 1.17z")
 RAYS = ("M12 21v1M21 12h1M12 3v-1M3 12h-1", "M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5")
 SVG = "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'>"
-THEME_ICONS = (
-    "<template id='i-sun'>" + SVG +
-    "<g fill='none' stroke='currentColor' stroke-linecap='round' stroke-width='2'>"
-    "<path stroke-dasharray='34' stroke-dashoffset='34' d='M12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17C9.24 17 7 "
-    "14.76 7 12C7 9.24 9.24 7 12 7'><animate fill='freeze' attributeName='stroke-dashoffset' dur='0.4s' values='34;0'/></path>"
-    "<g stroke-dasharray='2' stroke-dashoffset='2'><path d='M0 0'><animate fill='freeze' attributeName='d' begin='0.5s' "
-    f"dur='0.2s' values='M12 19v1M19 12h1M12 5v-1M5 12h-1;{RAYS[0]}'/><animate fill='freeze' "
-    "attributeName='stroke-dashoffset' begin='0.5s' dur='0.2s' values='2;0'/></path><path d='M0 0'><animate fill='freeze' "
-    "attributeName='d' begin='0.7s' dur='0.2s' values='M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;"
-    f"{RAYS[1]}'/><animate fill='freeze' attributeName='stroke-dashoffset' begin='0.7s' dur='0.2s' values='2;0'/></path>"
-    "</g></g></svg></template>"
-    "<template id='i-moon'>" + SVG +
-    "<g fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'>"
-    f"<g stroke-dasharray='2'><path d='{RAYS[0]}'><animate fill='freeze' attributeName='stroke-dashoffset' dur='0.2s' "
-    f"values='4;2'/></path><path d='{RAYS[1]}'><animate fill='freeze' attributeName='stroke-dashoffset' begin='0.2s' "
-    f"dur='0.2s' values='4;2'/></path></g><path d='{CRESCENT}' opacity='0'><set attributeName='opacity' begin='0.5s' "
-    "to='1'/></path></g><g fill='currentColor' fill-opacity='0'>"
-    f"<path d='{STARS[0]}'><animate fill='freeze' attributeName='fill-opacity' begin='0.6s' dur='0.4s' values='0;1'/></path>"
-    f"<path d='{STARS[1]}'><animate fill='freeze' attributeName='fill-opacity' begin='0.9s' dur='0.4s' values='0;1'/></path>"
-    "</g><mask id='enn-moon'><circle cx='12' cy='12' r='12' fill='#fff'/><circle cx='12' cy='12' r='4'><animate "
-    "fill='freeze' attributeName='r' begin='0.1s' dur='0.4s' values='4;8'/></circle><circle cx='22' cy='2' r='3' "
-    "fill='#fff'><animate fill='freeze' attributeName='cx' begin='0.1s' dur='0.4s' values='22;18'/><animate fill='freeze' "
-    "attributeName='cy' begin='0.1s' dur='0.4s' values='2;6'/><animate fill='freeze' attributeName='r' begin='0.1s' "
-    "dur='0.4s' values='3;12'/></circle><circle cx='22' cy='2' r='1'><animate fill='freeze' attributeName='cx' "
-    "begin='0.1s' dur='0.4s' values='22;18'/><animate fill='freeze' attributeName='cy' begin='0.1s' dur='0.4s' "
-    "values='2;6'/><animate fill='freeze' attributeName='r' begin='0.1s' dur='0.4s' values='1;10'/></circle></mask>"
-    "<circle cx='12' cy='12' r='6' fill='currentColor' mask='url(#enn-moon)'><set attributeName='opacity' begin='0.5s' "
-    "to='0'/><animate fill='freeze' attributeName='r' begin='0.1s' dur='0.4s' values='6;10'/></circle></svg></template>"
-    "<template id='i-auto'>" + SVG +
-    "<circle cx='12' cy='12' r='9' fill='none' stroke='currentColor' stroke-width='2' stroke-dasharray='57' "
-    "stroke-dashoffset='57'><animate fill='freeze' attributeName='stroke-dashoffset' dur='0.4s' values='57;0'/></circle>"
-    "<path d='M12 3a9 9 0 0 0 0 18z' fill='currentColor' opacity='0'><animate fill='freeze' attributeName='opacity' "
-    "begin='0.4s' dur='0.25s' values='0;1'/></path></svg></template>"
+THEME_ICONS = LINE_MD + (
     "<template id='i-auto-still'>" + SVG +
     "<circle cx='12' cy='12' r='9' fill='none' stroke='currentColor' stroke-width='2'/>"
     "<path d='M12 3a9 9 0 0 0 0 18z' fill='currentColor'/></svg></template>"
@@ -468,18 +746,28 @@ THEME_ICONS = (
     f"stroke-width='2'/><g fill='currentColor'><path d='{STARS[0]}'/><path d='{STARS[1]}'/></g></svg></template>"
 )
 
-THEME_BUTTON = ("<button type='button' class='theme-btn js-only' id='theme' aria-label='Theme' title='Theme'>"
-                "<span class='theme-icon' aria-hidden='true'></span></button>")
 
-SECONDS_BUTTON = ("<button type='button' class='secs-btn js-only' id='secs' aria-pressed='true' aria-label='Show seconds' "
-                  "title='Show seconds'>" + SVG + "<g fill='none' stroke='currentColor' stroke-width='2' "
-                  "stroke-linecap='round'><circle cx='12' cy='13' r='8'/><path d='M12 9v4l2.5 2M10 2h4M19 6l1.5-1.5'/></g>"
-                  "</svg></button>")
+def tip_button(id_, cls, label, tip, inner, extra=""):
+    """A header control with a tooltip that shows on hover and keyboard focus and goes with Escape (WCAG 1.4.13)."""
+    return (f"<button type='button' class='{cls} js-only' id='{id_}' aria-label='{esc(label)}' data-tip='{esc(tip)}'"
+            f"{extra}>{inner}</button>")
+
+
+THEME_BUTTON = tip_button("theme", "hdr-btn theme-btn", "Theme", "label",
+                          "<span class='theme-icon' aria-hidden='true'></span>")
+MOTION_BUTTON = tip_button(
+    "motion", "hdr-btn motion-btn", "Pause motion",
+    "Pause motion: stops the spinning globe, the moving icons, the seconds on the clock and the smooth scrolling. "
+    "It's remembered for your next visit; a device set to reduce motion starts with it on.",
+    icon("pause", "i i-pause") + icon("play", "i i-play"), " aria-pressed='false'")
+PAPER_SWITCH = tip_button(
+    "paper", "o-switch", "Orioni mode",
+    "Orioni mode: warm newsprint paper instead of white, like the FT or De Tijd, the way the Orioni press likes it. "
+    "It colours the light theme only, so turning it on leaves dark mode.",
+    "<span class='o-track' aria-hidden='true'><span class='o-knob'>O</span></span>", " role='switch' aria-checked='false'")
 
 SEARCH = ("<div class='search js-only' role='search'><label class='sr' for='q'>Search stories</label>"
-          "<svg class='search-i' viewBox='0 0 512 512' aria-hidden='true' focusable='false'><path d='M416 208c0 45.9-14.9 "
-          "88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 "
-          "416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z'/></svg>"
+          + icon("magnifying-glass", "search-i") +
           "<input id='q' type='search' placeholder='Search headlines, agencies, nations' autocomplete='off'>"
           "<kbd aria-hidden='true'>/</kbd></div>")
 
@@ -492,24 +780,53 @@ OWNER, SINCE = "Eurth", 2026
 YEARS = str(SINCE) if datetime.date.today().year <= SINCE else f"{SINCE}–{datetime.date.today().year}"
 RIGHTS = f"© {YEARS} {OWNER}. All rights reserved."
 
-FOOTER_NAV = [  # (name, where it lives, link)
-    ("Forums", "eurth.org", f"{SITE}/"),
-    ("Map", "map.eurth.org", "https://map.eurth.org/"),
-    ("Governmint", "gov.eurth.org", "https://gov.eurth.org/"),
-    ("Uptime", "status.eurth.org", "https://status.eurth.org/"),
-    ("The Newsroom", "eurth.org", f"{SITE}/c/affairs/the-newsroom/36"),
-    ("Guidelines", "eurth.org", f"{SITE}/guidelines"),
+FOOTER_NAV = [  # (name, where it lives, link, icon)
+    ("Forums", "eurth.org", f"{SITE}/", "comments"),
+    ("Map", "map.eurth.org", "https://map.eurth.org/", "map"),
+    ("Governmint", "gov.eurth.org", "https://gov.eurth.org/", "landmark"),
+    ("Uptime", "status.eurth.org", "https://status.eurth.org/", "heart-pulse"),
+    ("The Newsroom", "eurth.org", f"{SITE}/c/affairs/the-newsroom/36", "newspaper"),
+    ("Guidelines", "eurth.org", f"{SITE}/guidelines", "book-open"),
+]
+
+PERIODICALS = [  # (topic, name, what it is): the footer shows each one's latest issue
+    (5607, "The Eurth Weekly", "National and global news, reviewed every week."),
+    (2829, "Rhyme Magazine", "The monthly journal of global affairs."),
+]
+
+# A lead story without a photo gets its topic's icon over one of Eurth's own maps: no people and no real places,
+# so it fits whichever nation the story comes from.
+TOPICS = [  # (topic, icon, map, words), the topic with the most matching words wins
+    ("Conflict", "shield-halved", "night",
+     r"wars?|militar\w*|arm(?:y|ies|ed)|troops?|soldiers?|attacks?|invasion|invad\w+|ambush\w*|missiles?|nav(?:y|al)|"
+     r"defen[cs]e|clash\w*|rebels?|militias?|bomb\w*|ceasefire|weapons?|drones?|doctrine"),
+    ("Diplomacy", "handshake", "political",
+     r"treat(?:y|ies)|summits?|ambassadors?|diplomat\w*|sanctions?|allian\w+|embass(?:y|ies)|accords?|pacts?|"
+     r"condemn\w*|resolution"),
+    ("Politics", "landmark", "political",
+     r"elect\w*|parliament\w*|presiden\w*|government\w*|minist\w*|bills?|laws?|legislat\w*|assembl\w*|vot\w+|"
+     r"part(?:y|ies)|chancellor|referendum|cabinet|senate|congress|decree|coalition|protest\w*"),
+    ("Economy", "coins", "satellite",
+     r"currenc\w*|bank\w*|econom\w*|markets?|trade|oil|prices?|tax\w*|crypto\w*|business\w*|inflation|budgets?|gdp|"
+     r"invest\w*|stocks?|wages?|energy|strikes?|workers?"),
+    ("Health", "heart-pulse", "satellite",
+     r"hospitals?|outbreak|health\w*|diseases?|virus\w*|vaccin\w*|medic\w*|doctors?|patients?|mrsa"),
+    ("Science", "flask", "satellite",
+     r"scien\w*|research\w*|space|technolog\w*|engineer\w*|climate|canal|launch\w*|ai"),
+    ("Culture", "masks-theater", "satellite",
+     r"festival\w*|music\w*|films?|magazines?|arts?|sports?|cultur\w*|museums?|awards?|church\w*|religio\w*|royal"),
 ]
 
 # Theme surfaces for the browser's own chrome (address bar), set before the page paints.
 CHROME = {"light": "#ffffff", "paper": "#fcf6e1", "dark": "#002b36"}
 
-HEAD_SCRIPT = """(function(){var d=document.documentElement,m=window.matchMedia,t=null,p=null;
-try{t=localStorage.getItem("enn:theme");p=localStorage.getItem("enn:paper")}catch(e){}
+HEAD_SCRIPT = """(function(){var d=document.documentElement,m=window.matchMedia,t=null,p=null,c=null;
+try{t=localStorage.getItem("enn:theme");p=localStorage.getItem("enn:paper");c=localStorage.getItem("enn:motion")}catch(e){}
 var dark=t==="dark"||(t!=="light"&&!!m&&m("(prefers-color-scheme: dark)").matches);
 d.setAttribute("data-theme",dark?"dark":"light");if(p==="1")d.setAttribute("data-paper","");
-d.className+=" js"+(m&&m("(prefers-reduced-motion: reduce)").matches?"":" anim");
-var c=document.getElementById("theme-color");if(c)c.setAttribute("content",dark?"%s":p==="1"?"%s":"%s")})();""" % (
+var calm=c==="paused",less=!!m&&m("(prefers-reduced-motion: reduce)").matches;
+d.className+=" js"+(calm?" calm":"")+(calm||less?"":" anim");
+var e=document.getElementById("theme-color");if(e)e.setAttribute("content",dark?"%s":p==="1"?"%s":"%s")})();""" % (
     CHROME["dark"], CHROME["paper"], CHROME["light"])
 
 DARK = ("color-scheme:dark;--surface:#002b36;--surface-raised:#0a3a46;--line:#1f4a55;--line-strong:#8fa29d;"
@@ -518,7 +835,7 @@ DARK = ("color-scheme:dark;--surface:#002b36;--surface-raised:#0a3a46;--line:#1f
 
 CSS = """
 :root{color-scheme:light;
-  --eurth-blue:#2698d4;--night:#002b36;--parchment:#fcf6e1;
+  --eurth-blue:#2698d4;--eurth-blue-deep:#1b6fa0;--night:#002b36;--parchment:#fcf6e1;
   --surface:#ffffff;--surface-raised:#f6f6f6;--line:#e4e4e4;--line-strong:#6b6b6b;--ink:#222222;--ink-muted:#4f4f4f;
   --accent-text:#0a4b74;--highlight:#ffff4d;--on-highlight:#222222;--shade:rgba(0,43,54,.6);
   --radius-sm:2px;--radius-md:12px;--radius-avatar:10%;--bar-h:60px;--ease:cubic-bezier(.2,.7,.2,1);
@@ -532,6 +849,7 @@ CSS = """
 @media (prefers-color-scheme:dark){:root:not([data-theme]){@@DARK@@}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--bar-h) + 16px)}
+@media (prefers-reduced-motion:no-preference){html:not(.calm){scroll-behavior:smooth}}
 body{margin:0;background:var(--surface);color:var(--ink);font:16px/1.5 var(--sans)}
 [hidden]{display:none!important}
 html:not(.js) .js-only{display:none!important}
@@ -543,35 +861,48 @@ abbr[title]{text-decoration:none}
 .skip:focus{left:.5em}
 .paper{max-width:1280px;margin:0 auto;padding:0 2em 2.5em}
 .tap{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+.i{display:inline-block;flex:none;width:1em;height:1em;fill:currentColor;vertical-align:-.125em}
 
-/* The globe: a 240-frame strip that turns for a few seconds, then rests; hover or focus turns it again */
+/* The globe: a 240-frame strip, always turning unless motion is paused */
 .orb{display:block;flex:none;width:var(--s);height:var(--s);background:0 0/var(--s) auto no-repeat;
-  animation:orb 9.6s steps(240) infinite paused}
-.spin .orb,.orb-link:hover .orb,.orb-link:focus-visible .orb{animation-play-state:running}
+  animation:orb 9.6s steps(240) infinite}
+.calm .orb{animation-play-state:paused}
 @keyframes orb{to{background-position:0 calc(var(--s) * -240)}}
 
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);
   font:13px/20px var(--mono);color:var(--ink-muted)}
 .topbar>div{display:flex;align-items:center;gap:0 12px;flex-wrap:wrap}
+.topbar .controls{gap:0 8px}
 .topbar a{color:var(--ink);text-underline-offset:3px}
 #clock{display:inline-block;font-variant-numeric:tabular-nums}
 #clock.dim .sep{visibility:hidden}
-.secs-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:0 -8px 0 -4px;padding:0;
-  border:0;border-radius:999px;background:transparent;color:var(--ink-muted);cursor:pointer}
-.secs-btn svg{width:18px;height:18px}
-.secs-btn[aria-pressed=true]{color:var(--ink)}
-.secs-btn[aria-pressed=true] svg{background:var(--surface-raised);border-radius:999px;box-shadow:0 0 0 4px var(--surface-raised)}
-.secs-btn:hover{color:var(--ink)}
+.hdr-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:4px 0;padding:0;
+  border:1px solid var(--line-strong);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;
+  transition:background-color .2s,transform .15s}
+.hdr-btn:hover{background:var(--surface-raised)}
+.hdr-btn:active{transform:scale(.92)}
+.theme-icon,.theme-icon svg{display:block;width:22px;height:22px}
+.motion-btn .i{width:14px;height:14px}
+.motion-btn .i-play,.motion-btn[aria-pressed=true] .i-pause{display:none}
+.motion-btn[aria-pressed=true] .i-play{display:inline-block}
+.motion-btn[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+/* Orioni mode: an O that rolls along its track */
+.o-switch{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;margin:4px 0;padding:0 2px;
+  border:0;background:transparent;color:var(--ink);cursor:pointer}
+.o-track{position:relative;display:block;width:54px;height:30px;border-radius:999px;border:1px solid var(--line-strong);
+  background:var(--surface-raised);transition:background-color .3s,border-color .3s}
+.o-knob{position:absolute;top:3px;left:3px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:50%;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font:700 13px/1 var(--serif);
+  transition:transform .55s cubic-bezier(.3,1.35,.5,1),background-color .3s,color .3s}
+.o-switch:hover .o-track{border-color:var(--ink)}
+.o-switch[aria-checked=true] .o-track{background:var(--parchment);border-color:var(--ink)}
+.o-switch[aria-checked=true] .o-knob{transform:translateX(24px) rotate(360deg);background:var(--ink);color:var(--parchment)}
+.tip{position:fixed;z-index:7;max-width:min(300px,calc(100vw - 16px));margin:0;padding:8px 12px;font:14px/20px var(--sans);
+  color:var(--surface);background:var(--ink);border-radius:var(--radius-sm)}
 .toast{position:fixed;left:50%;bottom:24px;z-index:6;max-width:calc(100vw - 32px);margin:0;padding:10px 16px;
   font:15px/22px var(--sans);color:var(--surface);background:var(--ink);border-radius:var(--radius-md);
   opacity:0;transform:translate(-50%,8px);pointer-events:none;transition:opacity .25s,transform .25s var(--ease)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.theme-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:4px 0;padding:0;
-  border:1px solid var(--line-strong);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;
-  transition:background-color .2s,transform .15s}
-.theme-btn:hover{background:var(--surface-raised)}
-.theme-btn:active{transform:scale(.92)}
-.theme-icon,.theme-icon svg{display:block;width:22px;height:22px}
 .masthead{position:relative;text-align:center;padding:1.2em .5em 1.1em}
 .masthead::after{content:"";position:absolute;left:0;right:0;bottom:0;border-bottom:4px double var(--ink)}
 .masthead .title{display:block;margin:0;font:400 clamp(2em,6.4vw,4em)/1.08 var(--serif);letter-spacing:-.01em;
@@ -589,7 +920,10 @@ html:not(.js) .bar{position:static}
 .bar.stuck .brand{visibility:visible;opacity:1;transform:none}
 .panel{display:contents}
 .menu{display:flex;justify-content:center;flex-wrap:wrap;gap:0 26px}
-.menu a{position:relative;display:inline-flex;align-items:center;min-height:44px;font:700 14px/20px var(--sans);text-decoration:none}
+.menu a{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:44px;font:700 14px/20px var(--sans);
+  text-decoration:none}
+.menu .i{width:14px;height:14px;fill:var(--ink-muted);transition:fill .2s,transform .25s var(--ease)}
+.menu a:hover .i,.menu a:focus-visible .i{fill:var(--accent-text);transform:translateY(-1px)}
 .menu a::after{content:"";position:absolute;left:0;right:0;bottom:8px;height:2px;background:var(--accent-text);
   transform:scaleX(0);transform-origin:left;transition:transform .25s var(--ease)}
 .menu a:hover::after,.menu a:focus-visible::after{transform:scaleX(1)}
@@ -607,17 +941,23 @@ html:not(.js) .bar{position:static}
 .toolbar{padding:12px 0;border-bottom:1px solid var(--line)}
 .edition{margin:0;font-size:14px;line-height:20px;color:var(--ink-muted)}
 .edition strong,.new-count{color:var(--ink)}
+.edition a{color:var(--accent-text);text-underline-offset:3px}
 .filter-note{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 0;font-size:15px}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;font:700 14px/20px var(--sans);color:var(--ink);
-  background:transparent;border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;
-  text-decoration:none;transition:background-color .15s,border-color .15s,transform .15s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;font:700 14px/20px var(--sans);
+  color:var(--ink);background:transparent;border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:10px 16px;
+  cursor:pointer;text-decoration:none;transition:background-color .15s,border-color .15s,transform .15s}
+.btn .i{width:14px;height:14px}
 .btn:hover:not(:disabled){background:var(--surface-raised);border-color:var(--ink)}
 .btn:active:not(:disabled){transform:scale(.97)}
 .btn:disabled{opacity:.45;cursor:default}
-.cta{display:inline-flex;align-items:center;min-height:44px;font:700 19px/24px var(--sans);color:var(--night);
+.btn .i-check,.btn.done .i-link{display:none}
+.btn.done .i-check{display:inline-block}
+/* The one brand exception to 7:1: white on Eurth blue, at the size the Eurth system allows it (3.2:1, 19px bold) */
+.cta{display:inline-flex;align-items:center;gap:10px;min-height:44px;font:700 19px/24px var(--sans);color:#fff;
   background:var(--eurth-blue);border-radius:var(--radius-md);padding:10px 20px;text-decoration:none;white-space:nowrap;
-  transition:background-color .15s,color .15s,transform .15s}
-.cta:hover{background:#0a4b74;color:#fff}
+  transition:background-color .15s,transform .15s}
+.cta .i{width:18px;height:18px}
+.cta:hover{background:var(--eurth-blue-deep)}
 .cta:active{transform:scale(.97)}
 
 .kicker{margin:0 0 8px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
@@ -636,8 +976,23 @@ html:not(.js) .bar{position:static}
 .nation{color:var(--ink);font-weight:700}
 .thumb{aspect-ratio:3/2;overflow:hidden;background:var(--surface-raised);border-radius:var(--radius-sm);margin:0 0 12px}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease)}
+/* Placeholder for a lead story without a photo: its topic over one of Eurth's maps, in the horizon disc */
+.ph{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px;
+  padding:0 0 0 clamp(24px,7%,64px);background:var(--night);color:var(--parchment)}
+.ph-disc{position:absolute;right:-12%;top:-32%;width:76%;aspect-ratio:1;border-radius:9999px;
+  background:var(--map) center/cover no-repeat,var(--night);box-shadow:0 0 0 6px var(--eurth-blue);transition:transform 1.2s var(--ease)}
+.ph-i{position:relative;width:clamp(44px,9vw,72px);height:clamp(44px,9vw,72px);fill:var(--parchment)}
+.ph-k{position:relative;font:700 14px/20px var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.lead:hover .ph-disc{transform:rotate(-8deg) scale(1.03)}
 
-.front{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:0 36px;padding:32px 0;border-bottom:4px double var(--ink)}
+.group-h{display:flex;align-items:center;gap:10px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 20px}
+.group-h::after{content:"";flex:1;border-top:1px solid var(--ink)}
+.col-h{display:flex;align-items:center;gap:10px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--ink)}
+.group-h .i,.col-h .i{width:14px;height:14px;fill:var(--accent-text)}
+.top-stories{padding-top:28px}
+.front{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:0 36px;padding:0 0 32px;border-bottom:4px double var(--ink)}
 .lead{position:relative}
 .lead .thumb{aspect-ratio:2/1;margin-bottom:16px}
 .lead .kicker{font-size:14px;line-height:20px}
@@ -645,8 +1000,6 @@ html:not(.js) .bar{position:static}
 .lead .dek{font:400 1.1em/1.65 var(--serif);-webkit-line-clamp:5;margin-bottom:16px}
 .lead .meta{margin-bottom:20px}
 .latest{border-left:1px solid var(--line);padding-left:36px}
-.col-h{font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 16px;padding-bottom:10px;
-  border-bottom:1px solid var(--ink)}
 .side{position:relative;display:grid;grid-template-columns:minmax(0,1fr);column-gap:16px;padding:0 0 16px;margin:0 0 16px;
   border-bottom:1px solid var(--line)}
 .side:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
@@ -661,9 +1014,6 @@ html:not(.js) .bar{position:static}
 .lead:hover .thumb img{transform:scale(1.02)}
 
 .body-grid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:36px;margin-top:32px}
-.group-h{display:flex;align-items:center;gap:12px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
-  margin:0 0 20px}
-.group-h::after{content:"";flex:1;border-top:1px solid var(--ink)}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:24px 36px;margin-bottom:40px}
 .card{position:relative;display:flex;flex-direction:column;padding:16px;margin:0 -16px;border:1px solid transparent;
   border-top-color:var(--line);border-radius:var(--radius-sm);
@@ -672,7 +1022,7 @@ html:not(.js) .bar{position:static}
   border-top-color:var(--accent-text);box-shadow:inset 0 2px 0 var(--accent-text)}
 .card:hover .thumb img{transform:scale(1.04)}
 .card:not(.has-thumb) .dek{-webkit-line-clamp:9}
-.filtering .front,.filtering .group-h{display:none}
+.filtering .top-stories,.filtering .feed>.group-h{display:none}
 .empty{padding:32px 0;text-align:center;color:var(--ink-muted)}
 
 .rail{border-left:1px solid var(--line);padding-left:36px;align-self:start;position:sticky;top:calc(var(--bar-h) + 16px)}
@@ -698,23 +1048,44 @@ html:not(.js) .bar{position:static}
 .nations .n{font-family:var(--mono);color:var(--ink-muted)}
 .nations button[aria-pressed=true] .n{color:inherit}
 
-.sitefoot{text-align:center;border-top:4px double var(--ink);margin-top:16px;padding-top:24px}
-.sitefoot .title{font:400 1.6em/1.2 var(--serif);margin:0 0 8px}
-.sitefoot p{font-size:15px;line-height:24px;color:var(--ink-muted);margin:8px auto;max-width:46em}
-.elsewhere ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:4px 12px;
-  max-width:980px;margin:20px auto;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.elsewhere a{display:flex;flex-direction:column;justify-content:center;min-height:44px;padding:6px 8px;text-decoration:none;
-  border-radius:var(--radius-sm);transition:background-color .15s}
-.elsewhere a:hover{background:var(--surface-raised)}
-.elsewhere .n{font:700 15px/20px var(--sans);color:var(--accent-text)}
-.elsewhere a:hover .n{text-decoration:underline}
-.elsewhere .d{font:13px/20px var(--mono);color:var(--ink-muted)}
-.sitefoot .legal{font-size:13px;line-height:20px;margin-top:16px}
-.sitefoot .legal+.legal{margin-top:8px}
-.paper-row{display:flex;justify-content:center;align-items:center;gap:8px 12px;flex-wrap:wrap}
-.paper-btn::before{content:"";width:14px;height:14px;margin-right:10px;border-radius:var(--radius-sm);background:var(--parchment);
-  border:1px solid var(--line-strong)}
-.paper-btn[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+/* Footer: about, Eurth's other sites, the periodicals, then the small print */
+.sitefoot{border-top:4px double var(--ink);margin-top:16px}
+.foot-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.5fr);gap:32px 48px;padding:32px 0;
+  border-bottom:1px solid var(--line)}
+.foot-title{font:400 1.6em/1.2 var(--serif);margin:0 0 12px}
+.foot-about p{font-size:15px;line-height:24px;color:var(--ink-muted);margin:0 0 16px;max-width:34em}
+.foot-about .orb{margin-bottom:12px}
+.foot-links,.papers{list-style:none;margin:0;padding:0}
+.foot-links a{display:grid;grid-template-columns:32px minmax(0,1fr);align-items:center;column-gap:10px;min-height:44px;
+  padding:6px 8px;margin:0 -8px;text-decoration:none;border-radius:var(--radius-sm);transition:background-color .15s}
+.foot-links a:hover{background:var(--surface-raised)}
+.foot-links .i{grid-row:1/span 2;width:18px;height:18px;justify-self:center;fill:var(--accent-text);
+  transition:transform .3s var(--ease)}
+.foot-links a:hover .i{transform:scale(1.15) rotate(-6deg)}
+.foot-links .n{font:700 15px/20px var(--sans);color:var(--ink)}
+.foot-links a:hover .n{text-decoration:underline}
+.foot-links .d{font:13px/20px var(--mono);color:var(--ink-muted)}
+.papers{display:grid;gap:16px}
+.papers a{position:relative;display:grid;grid-template-columns:84px minmax(0,1fr);gap:4px 16px;align-items:start;padding:12px;
+  margin:0 -12px;text-decoration:none;border:1px solid transparent;border-radius:var(--radius-sm);
+  transition:background-color .2s,border-color .2s}
+.papers a:hover{background:var(--surface-raised);border-color:var(--line-strong)}
+.cover{grid-row:1/span 4;display:block;width:84px;height:108px;overflow:hidden;background:var(--night);
+  border-radius:var(--radius-sm);transform:rotate(-2deg);transition:transform .4s var(--ease)}
+.cover img{display:block;width:100%;height:100%;object-fit:cover}
+.papers a:hover .cover{transform:rotate(0) scale(1.05)}
+.papers a.wide{grid-template-columns:minmax(0,1fr)}
+.papers a.wide .cover{grid-row:auto;width:100%;height:auto;max-width:360px;aspect-ratio:auto;transform:rotate(-1deg)}
+.papers a.wide .cover img{height:auto;object-fit:contain}
+.p-name{font:400 1.15em/1.3 var(--serif);color:var(--ink)}
+.papers a:hover .p-name{text-decoration:underline}
+.p-blurb{font-size:14px;line-height:20px;color:var(--ink-muted)}
+.p-issue{font:13px/20px var(--mono);color:var(--ink-muted)}
+.p-go{display:inline-flex;align-items:center;gap:6px;font:700 14px/20px var(--sans);color:var(--accent-text);margin-top:4px}
+.p-go .i{width:12px;height:12px;transition:transform .25s var(--ease)}
+.papers a:hover .p-go .i{transform:translateX(4px)}
+.foot-legal{padding:20px 0 0;text-align:center}
+.foot-legal p{font-size:13px;line-height:20px;color:var(--ink-muted);margin:0 auto 8px;max-width:56em}
 
 #reader{padding:0;border:0;width:min(800px,100vw);max-width:100vw;height:100vh;height:100dvh;max-height:100dvh;margin:0 auto;
   background:var(--surface);color:var(--ink)}
@@ -760,7 +1131,10 @@ html.reading{overflow:hidden}
 .crumbs a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);text-underline-offset:3px}
 .pager{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:32px 0 8px;padding-top:20px;border-top:1px solid var(--line)}
 .pager a{display:block;min-height:44px;text-decoration:none}
-.pager .k{display:block;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px}
+.pager .k{display:flex;align-items:center;gap:8px;font:700 12px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-muted);margin-bottom:6px}
+.pager .older .k{justify-content:flex-end}
+.pager .k .i{width:12px;height:12px}
 .pager .t{font:400 1.05em/1.4 var(--serif)}
 .pager a:hover .t{text-decoration:underline}
 .pager .older{grid-column:2;text-align:right}
@@ -774,17 +1148,19 @@ html.vt-shrink::view-transition-old(root){z-index:9999}
 html.vt-shrink::view-transition-new(root){z-index:1}
 
 /* Arrivals, once per visit and never for reduced motion: the masthead rule is drawn, the lead settles,
-   stories rise into place as they scroll in, Most read fills its meters, the clock rolls over each minute */
+   stories rise into place as they scroll in, Most read fills its meters */
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
 @keyframes draw{from{transform:scaleX(0)}}
 @keyframes settle{from{opacity:.35;transform:scale(1.06)}}
 @keyframes grow{from{transform:scaleX(0)}}
 @keyframes pop{0%{opacity:0;transform:scale(.4)}70%{transform:scale(1.12)}100%{transform:none}}
 @keyframes drop{from{opacity:0;transform:translateY(-6px)}}
+@keyframes fade{from{opacity:0}}
 .anim .masthead .title{animation:rise .8s var(--ease) both}
 .anim .masthead .tagline{animation:rise .8s .15s var(--ease) both}
 .anim .masthead::after{animation:draw 1s .2s var(--ease) both}
-.anim .lead .thumb img{animation:settle 1.4s var(--ease) both}
+.anim .lead .thumb img,.anim .lead .ph-disc{animation:settle 1.4s var(--ease) both}
+.anim .lead .ph-i,.anim .lead .ph-k{animation:rise .8s .3s var(--ease) both}
 .anim .lead .kicker,.anim .lead .hl,.anim .lead .dek,.anim .lead .meta,.anim .lead .btn{animation:rise .7s var(--ease) both}
 .anim .lead .hl{animation-delay:.08s}.anim .lead .dek{animation-delay:.16s}
 .anim .lead .meta{animation-delay:.24s}.anim .lead .btn{animation-delay:.32s}
@@ -795,12 +1171,13 @@ html.vt-shrink::view-transition-new(root){z-index:1}
 .anim .bar.open .panel{animation:drop .25s var(--ease)}
 .anim #reader[open]{animation:rise .25s var(--ease)}
 .anim #reader[open]::backdrop{animation:fade .25s ease}
-@keyframes fade{from{opacity:0}}
+.anim .tip:not([hidden]){animation:fade .15s ease}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
   transition-duration:.001ms!important}.orb{animation:none!important}}
 
 @media (min-width:860px){#reader{height:calc(100dvh - 48px);margin:24px auto;border:1px solid var(--line-strong)}}
-@media (max-width:1000px){.body-grid{grid-template-columns:minmax(0,1fr) 240px}}
+@media (max-width:1000px){.body-grid{grid-template-columns:minmax(0,1fr) 240px}
+  .foot-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.foot-papers{grid-column:1/-1}}
 @media (max-width:860px){
   .paper{padding:0 16px 32px}
   .front,.body-grid{grid-template-columns:minmax(0,1fr)}
@@ -811,9 +1188,9 @@ html.vt-shrink::view-transition-new(root){z-index:1}
   .menu-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-left:auto;font:700 14px/20px var(--sans);
     color:var(--ink);background:transparent;border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:10px 14px;
     cursor:pointer}
-  .menu-btn svg{width:14px;height:16px;fill:currentColor}
+  .menu-btn .i{width:14px;height:14px}
   .menu-btn .i-close,.bar.open .menu-btn .i-bars{display:none}
-  .bar.open .menu-btn .i-close{display:block}
+  .bar.open .menu-btn .i-close{display:inline-block}
   .panel{display:flex;flex-direction:column;gap:16px;width:100%;padding:0 0 16px}
   html.js .bar:not(.open) .panel{display:none}
   .menu{flex-direction:column;gap:0}
@@ -825,16 +1202,17 @@ html.vt-shrink::view-transition-new(root){z-index:1}
   .search kbd{display:none}
   .c-wd{display:none}
 }
+@media (max-width:640px){.foot-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:560px){
   .cards{grid-template-columns:minmax(0,1fr);gap:20px}
   .card.has-thumb{display:grid;grid-template-columns:minmax(0,1fr) 92px;column-gap:16px;align-content:start}
   .card.has-thumb>*{grid-column:1}
   .card.has-thumb .thumb{grid-column:2;grid-row:1/span 4;aspect-ratio:1;margin:0}
   .card .dek,.card:not(.has-thumb) .dek{-webkit-line-clamp:3}
-  .pager{grid-template-columns:1fr}.pager .older{grid-column:1;text-align:left}
+  .pager{grid-template-columns:1fr}.pager .older{grid-column:1;text-align:left}.pager .older .k{justify-content:flex-start}
 }
 main:not(.filtering) .card.dup{display:none}
-@media print{.bar,.rail,#reader,.skip,.comments,.theme-btn,.paper-row{display:none!important}
+@media print{.bar,.rail,#reader,.skip,.comments,.topbar .controls,.tip,.toast{display:none!important}
   .reveal{opacity:1!important;animation:none!important}}
 """.replace("@@DARK@@", DARK)
 
@@ -843,7 +1221,10 @@ BASE_SCRIPT = """
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var root = document.documentElement;
   var lessMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : null;
-  function still() { return !!(lessMotion && lessMotion.matches); }
+  function calm() { return root.classList.contains("calm"); }
+  function still() { return calm() || !!(lessMotion && lessMotion.matches); }
+  function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
   // Relative times, refreshed every minute; the full date, in the reader's own time zone, stays in the tooltip.
   var day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
@@ -868,8 +1249,8 @@ BASE_SCRIPT = """
   }
 
   // Today's date and the reader's local time, to the second, with the separators blinking every other second as on
-  // a Mac. The seconds button stops both (WCAG 2.2.2); reduced motion keeps the separators still.
-  var clock = $("#clock"), secsBtn = $("#secs"), secs = stored("enn:secs") !== "off", lastMinute = -1, clockTimer = 0;
+  // a Mac; with motion paused it shows minutes only (WCAG 2.2.2).
+  var clock = $("#clock"), lastMinute = -1, clockTimer = 0;
   var today = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
   var withSecs = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short" });
   var noSecs = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
@@ -884,62 +1265,99 @@ BASE_SCRIPT = """
     return v;
   }
   function render() {
-    var d = new Date();
+    var d = new Date(), secs = !still();
+    clearTimeout(clockTimer);
     if (clock) {
       var dp = today.formatToParts(d), wd = dp[0].type === "weekday" ? dp[0].value + dp[1].value : "";
       clock.innerHTML = '<span class="c-wd">' + wd + "</span>" + dp.slice(wd ? 2 : 0).map(function (p) { return p.value; }).join("") +
         " \\u00b7 " + (secs ? withSecs : noSecs).formatToParts(d).map(function (p) { return part(p, d); }).join("");
       clock.setAttribute("datetime", d.toISOString());
       clock.title = "Your local time";
-      clock.classList.toggle("dim", secs && !still() && d.getSeconds() % 2 === 1);
+      clock.classList.toggle("dim", secs && d.getSeconds() % 2 === 1);
     }
     if (d.getMinutes() !== lastMinute) { lastMinute = d.getMinutes(); tick(); }
     var t = Date.now();
     clockTimer = setTimeout(render, secs ? 1000 - t % 1000 : 60000 - t % 60000);
   }
-  function showSecs() { if (secsBtn) secsBtn.setAttribute("aria-pressed", String(secs)); }
-  if (secsBtn) secsBtn.addEventListener("click", function () {
-    secs = !secs;
-    save("enn:secs", secs ? null : "off");
-    showSecs();
-    clearTimeout(clockTimer);
-    render();
-  });
 
-  // The globe turns for a few seconds and then rests, so nothing on the page moves for long (WCAG 2.2.2).
-  function spin(el, ms) {
-    if (!el || still()) return;
-    el.classList.add("spin");
-    clearTimeout(el.spinning);
-    el.spinning = setTimeout(function () { el.classList.remove("spin"); }, ms);
+  // The favicon is the globe too, turning in the tab (as on gov.eurth.org) unless motion is paused.
+  var fav = $("#favicon"), favTimer = 0, favSprite = null;
+  function favicon() {
+    clearInterval(favTimer);
+    if (!fav) return;
+    if (still()) { fav.href = fav.getAttribute("data-still"); return; }
+    var c = document.createElement("canvas"), g = c.getContext && c.getContext("2d"), f = 0;
+    if (!g) return;
+    c.width = c.height = 64;
+    function run() {
+      favTimer = setInterval(function () {
+        g.clearRect(0, 0, 64, 64);
+        g.drawImage(favSprite, 0, f * 64, 64, 64, 0, 0, 64, 64);
+        fav.href = c.toDataURL("image/png");
+        f = (f + 2) % 240;
+      }, 80);
+    }
+    if (favSprite) { run(); return; }
+    favSprite = new Image();
+    favSprite.onload = run;
+    favSprite.src = fav.getAttribute("data-sprite");
   }
-  spin($(".topbar .orb-link"), 5000);
+
+  // Tooltips for the header controls: on hover and keyboard focus, they stay while pointed at and go with Escape.
+  var tipEl = $("#tip"), tipFor = null, tipHide = 0;
+  function showTip(el) {
+    if (!tipEl) return;
+    clearTimeout(tipHide);
+    var t = el.getAttribute("data-tip");
+    tipFor = el;
+    tipEl.textContent = t === "label" ? el.getAttribute("aria-label") : t;
+    tipEl.hidden = false;
+    if (t !== "label") el.setAttribute("aria-describedby", "tip");
+    var r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    var x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8), y = r.bottom + 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, r.top - h - 8);
+    tipEl.style.left = x + "px";
+    tipEl.style.top = y + "px";
+  }
+  function hideTip(now) {
+    if (!tipEl) return;
+    clearTimeout(tipHide);
+    function go() { if (tipFor) tipFor.removeAttribute("aria-describedby"); tipFor = null; tipEl.hidden = true; }
+    if (now) go(); else tipHide = setTimeout(go, 200);
+  }
+  $$("[data-tip]").forEach(function (el) {
+    el.addEventListener("pointerenter", function () { showTip(el); });
+    el.addEventListener("pointerleave", function () { hideTip(); });
+    el.addEventListener("focus", function () { if (el.matches(":focus-visible")) showTip(el); });
+    el.addEventListener("blur", function () { hideTip(true); });
+  });
+  if (tipEl) {
+    tipEl.addEventListener("pointerenter", function () { clearTimeout(tipHide); });
+    tipEl.addEventListener("pointerleave", function () { hideTip(); });
+  }
+  addEventListener("scroll", function () { if (tipFor) hideTip(true); }, { passive: true });
 
   // Section bar: sticks to the top, brings in the globe and title once the masthead has scrolled away,
   // folds into a menu on phones.
   var bar = $("#bar"), menuBtn = $("#menu-btn"), mast = $(".masthead");
   if (mast && "IntersectionObserver" in window) {
-    new IntersectionObserver(function (e) {
-      var stuck = !e[0].isIntersecting;
-      if (stuck && !bar.classList.contains("stuck")) spin($(".brand"), 3000);
-      bar.classList.toggle("stuck", stuck);
-    }).observe(mast);
+    new IntersectionObserver(function (e) { bar.classList.toggle("stuck", !e[0].isIntersecting); }).observe(mast);
   }
   function menu(open) { bar.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", String(open)); }
   menuBtn.addEventListener("click", function () { menu(!bar.classList.contains("open")); });
   $$("#panel a").forEach(function (a) { a.addEventListener("click", function () { menu(false); }); });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && bar.classList.contains("open") && e.target.id !== "q") { menu(false); menuBtn.focus(); }
+    if (e.key !== "Escape") return;
+    if (tipFor) { hideTip(true); return; }
+    if (bar.classList.contains("open") && e.target.id !== "q") { menu(false); menuBtn.focus(); }
   });
 
   // Auto, light, dark and Orioni mode (after github.com/stijn/deluminator and gov.eurth.org). Auto follows the
   // device and is remembered by forgetting the choice; each click moves on: from auto it flips the page, then keeps
   // the device's look even if the device changes, then returns to auto. Open tabs keep in step.
-  var themeBtn = $("#theme"), paperBtn = $("#paper"), chrome = $("#theme-color"), toastEl = $("#toast"),
-      sys = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  var themeBtn = $("#theme"), paperBtn = $("#paper"), motionBtn = $("#motion"), chrome = $("#theme-color"),
+      toastEl = $("#toast"), sys = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
   var NAMES = { auto: "auto, as your device is set", light: "light, always", dark: "dark, always" };
-  function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function save(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
   function isPaper() { return root.hasAttribute("data-paper"); }
   function device() { return sys && sys.matches ? "dark" : "light"; }
@@ -952,16 +1370,18 @@ BASE_SCRIPT = """
     clearTimeout(toastEl.hiding);
     toastEl.hiding = setTimeout(function () { toastEl.classList.remove("show"); }, 4000);
   }
-  function paint(dark, paper) {
+  // how: "to-dark" or "to-light" plays line-md's morph from one icon to the other.
+  function paint(dark, paper, how) {
     root.setAttribute("data-theme", dark ? "dark" : "light");
     if (paper) root.setAttribute("data-paper", ""); else root.removeAttribute("data-paper");
     if (chrome) chrome.setAttribute("content", dark ? "@@DARK@@" : paper ? "@@PAPER@@" : "@@LIGHT@@");
     var m = mode(), label = "Theme: " + NAMES[m] + ". Switch to " + after(m) + ".";
     themeBtn.setAttribute("aria-label", label);
-    themeBtn.title = label;
-    if (paperBtn) paperBtn.setAttribute("aria-pressed", String(paper && !dark));
-    var icon = document.getElementById("i-" + (m === "auto" ? "auto" : dark ? "moon" : "sun") + (still() ? "-still" : ""));
-    $(".theme-icon", themeBtn).replaceChildren(icon.content.cloneNode(true));
+    if (paperBtn) paperBtn.setAttribute("aria-checked", String(paper && !dark));
+    var name = m === "auto" ? "auto" : dark ? "moon" : "sun";
+    var id = still() ? name + "-still" : m !== "auto" && how ? how : name;
+    $(".theme-icon", themeBtn).replaceChildren(document.getElementById("i-" + id).content.cloneNode(true));
+    if (tipFor === themeBtn) showTip(themeBtn);
   }
   // The new look grows out of the button that was pressed, or the old one shrinks into it.
   var switching = null;
@@ -990,24 +1410,40 @@ BASE_SCRIPT = """
     save("enn:theme", m === "auto" ? null : m);
     toast("Theme: " + NAMES[m] + ".");
     if (dark === isDark()) { paint(dark, isPaper()); return; }
-    reveal(themeBtn, e, !dark, function () { paint(dark, isPaper()); });
+    reveal(themeBtn, e, !dark, function () { paint(dark, isPaper(), dark ? "to-dark" : "to-light"); });
   });
   if (paperBtn) paperBtn.addEventListener("click", function (e) {
-    var paper = !(isPaper() && !isDark());
+    var paper = !(isPaper() && !isDark()), wasDark = isDark();
     save("enn:paper", paper ? "1" : "0");
-    if (paper && isDark()) save("enn:theme", "light");
+    if (paper && wasDark) save("enn:theme", "light");
     toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
-    reveal(paperBtn, e, paper, function () { paint(paper ? false : isDark(), paper); });
+    reveal(paperBtn, e, paper, function () { paint(paper ? false : wasDark, paper, paper && wasDark ? "to-light" : ""); });
   });
   if (sys && sys.addEventListener) sys.addEventListener("change", function (e) { if (mode() === "auto") paint(e.matches, isPaper()); });
   addEventListener("storage", function (e) {
+    if (e.key === "enn:motion") { setMotion(e.newValue === "paused", true); return; }
     if (e.key !== "enn:theme" && e.key !== "enn:paper") return;
     var t = stored("enn:theme");
     paint(t === "dark" || (!t && !!sys && sys.matches), stored("enn:paper") === "1");
   });
+
+  // Pause motion: one switch for everything that moves on its own (WCAG 2.2.2), remembered for the next visit.
+  function setMotion(paused, quiet) {
+    root.classList.toggle("calm", paused);
+    if (motionBtn) motionBtn.setAttribute("aria-pressed", String(still()));
+    if (!quiet) { save("enn:motion", paused ? "paused" : null); toast(paused ? "Motion paused." : "Motion back on."); }
+    paint(isDark(), isPaper());
+    render();
+    favicon();
+  }
+  if (motionBtn) motionBtn.addEventListener("click", function () {
+    if (lessMotion && lessMotion.matches) { toast("Your device asks for reduced motion, so things stay still."); return; }
+    setMotion(!calm());
+  });
+  if (motionBtn) motionBtn.setAttribute("aria-pressed", String(still()));
   paint(isDark(), isPaper());
-  showSecs();
   render();
+  favicon();
 
   // Stories rise into place as they scroll into view, a few at a time.
   var arrivals = root.classList.contains("anim") && "IntersectionObserver" in window && new IntersectionObserver(function (es) {
@@ -1095,7 +1531,7 @@ SCRIPT = """
 
   // Reader: full story in a dialog, deep-linkable as #story-<post id>, with newer/older navigation.
   // Links never open new tabs (WCAG 3.2.5); Back returns to the story.
-  var dlg = $("#reader"), body = $("#r-body"), order = [], cur = -1, pushed = false, opener = null;
+  var dlg = $("#reader"), body = $("#r-body"), copy = $("#r-copy"), order = [], cur = -1, pushed = false, opener = null;
   function visible() {
     if (!main.classList.contains("filtering")) return S.map(function (_, i) { return i; });
     return $$(".feed .card:not([hidden])").map(function (c) { return +c.dataset.i; });
@@ -1116,7 +1552,8 @@ SCRIPT = """
     $("#r-link").href = s.u;
     $("#r-page").href = s.p;
     $$(".r-what").forEach(function (el) { el.textContent = ": " + s.h; });
-    $("#r-copy").textContent = "Copy link";
+    copy.classList.remove("done");
+    $(".lbl", copy).textContent = "Copy link";
     body.replaceChildren(document.getElementById("b" + i).content.cloneNode(true));
     var at = order.indexOf(i);
     $("#r-pos").textContent = (at + 1) + " of " + order.length;
@@ -1149,9 +1586,9 @@ SCRIPT = """
   $("#r-prev").addEventListener("click", function () { step(-1); });
   $("#r-next").addEventListener("click", function () { step(1); });
   $("#r-close").addEventListener("click", function () { dlg.close(); });
-  $("#r-copy").addEventListener("click", function () {
-    var b = this, url = new URL(S[cur].p, location.href).href;
-    function done() { b.textContent = "Link copied"; announce.textContent = "Link to this story copied"; }
+  copy.addEventListener("click", function () {
+    var url = new URL(S[cur].p, location.href).href;
+    function done() { copy.classList.add("done"); $(".lbl", copy).textContent = "Link copied"; announce.textContent = "Link to this story copied"; }
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () { prompt("Copy this link", url); });
     else prompt("Copy this link", url);
   });
@@ -1220,14 +1657,31 @@ def thumb(s, eager=False):
             f'{load} decoding="async" referrerpolicy="no-referrer"></div>')
 
 
+def topic(s):
+    """The story's broad topic, from the words in its headline, label and standfirst."""
+    text = " ".join([s["headline"], s["label"], s["dek"]]).lower()
+    best, score = ("News", "newspaper", "satellite"), 0
+    for name, ic, mp, words in TOPICS:
+        n = len(re.findall(rf"\b(?:{words})\b", text))
+        if n > score:
+            best, score = (name, ic, mp), n
+    return best
+
+
+def placeholder(s, base=""):
+    name, ic, mp = topic(s)
+    return (f"<div class='thumb ph' aria-hidden='true' style='--map:url({base}static/map-{mp}.jpg)'>"
+            f"<span class='ph-disc'></span>{icon(ic, 'ph-i')}<span class='ph-k'>{name}</span></div>")
+
+
 def dek(s):
     return f'<p class="dek">{esc(s["dek"])}</p>' if s["dek"] else ""
 
 
 def lead_story(s):
-    return (f'<article class="lead story" data-i="0">{thumb(s, eager=True)}{kicker(s)}{headline(s, 0, "h2")}'
-            f'{dek(s)}{meta(s)}<a class="btn" href="{esc(page_path(s))}" data-i="0">Read the full story'
-            f'<span class="sr">: {esc(s["headline"])}</span></a></article>')
+    return (f'<article class="lead story" data-i="0">{thumb(s, eager=True) or placeholder(s)}{kicker(s)}'
+            f'{headline(s, 0, "h3")}{dek(s)}{meta(s)}<a class="btn" href="{esc(page_path(s))}" data-i="0">'
+            f'{icon("newspaper")}Read the full story<span class="sr">: {esc(s["headline"])}</span></a></article>')
 
 
 def side_story(s, i):
@@ -1262,7 +1716,8 @@ def head(title, card_title, description, url, image, base, extra=""):
         f"<link rel='canonical' href='{esc(url)}'>"
         f"<link rel='alternate' type='application/rss+xml' title='Eurth News Network' href='{base}news.rss'>"
         f"<link rel='alternate' type='application/json+oembed' href='{esc(url)}oembed.json' title='{esc(card_title)}'>"
-        f"<link rel='icon' href='{base}static/favicon.svg' type='image/svg+xml'>"
+        f"<link rel='icon' id='favicon' type='image/png' href='{base}static/favicon-64.png' "
+        f"data-still='{base}static/favicon-64.png' data-sprite='{base}static/eurth-globe-sprite.png'>"
         f"<link rel='apple-touch-icon' href='{base}static/apple-touch-icon.png'>"
         f"<meta property='og:site_name' content='Eurth News Network · Geofiction'>"
         f"<meta property='og:locale' content='en_GB'>"
@@ -1303,51 +1758,90 @@ def orb(base, size):
 
 
 def topbar(now, base=""):
-    """The globe, today's date and (once the script runs) the reader's local time; RSS and the theme switch."""
+    """The globe and today's date (with the reader's local time once the script runs); motion, Orioni, theme."""
     return (f"<div class='topbar'><div><a class='tap orb-link' href='{SITE}' aria-label='eurth.org'>{orb(base, 32)}</a>"
-            f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time>"
-            f"{SECONDS_BUTTON}</div>"
-            f"<div><span>Updated <time datetime='{now.isoformat(timespec='seconds')}' data-rel>{now:%H:%M} "
-            f"<abbr title='Coordinated Universal Time'>UTC</abbr></time></span>"
-            f"<a class='tap' href='{base}news.rss'>RSS feed</a>{THEME_BUTTON}</div></div>")
+            f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time></div>"
+            f"<div class='controls'>{MOTION_BUTTON}{PAPER_SWITCH}{THEME_BUTTON}</div></div>")
 
 
 def bar(base="", search=""):
     """Sticky section bar: links within this site (search too on the front page); a menu button on phones."""
     links = ""
-    for name, anchor in MENU:
+    for name, anchor, ic in MENU:
         cls = " class='js-only'" if anchor == "nations" else ""
-        links += f"<a href='{base}#{anchor}'{cls}>{name}</a>"
+        links += f"<a href='{base}#{anchor}'{cls}>{icon(ic)}<span>{name}</span></a>"
     return (f"<nav class='bar' id='bar' aria-label='Sections'><div class='bar-in'>"
             f"<a class='brand orb-link' href='{base or '#'}'>{orb(base, 28)}Eurth News Network</a>"
             f"<button type='button' class='menu-btn js-only' id='menu-btn' aria-expanded='false' aria-controls='panel'>"
-            f"{ICONS}<span>Menu</span></button>"
+            f"{icon('bars', 'i i-bars')}{icon('xmark', 'i i-close')}<span>Menu</span></button>"
             f"<div class='panel' id='panel'><div class='menu'>{links}</div>{search}</div>"
             f"</div></nav>")
 
 
-def footer(base=""):
-    links = "".join(f"<li><a href='{href}'><span class='n'>{esc(name)}</span><span class='d'>{esc(where)}</span></a></li>"
-                    for name, where, href in FOOTER_NAV)
-    return (f"<footer class='sitefoot'><p class='title'>Eurth News Network</p>"
-            f"<p>The newest stories from The Newsroom on eurth.org. Everything here is fiction, written by the members of "
-            f"Eurth, the Worldbuilding &amp; Roleplay Writing Community; each story appears as its agency published it.</p>"
-            f"<nav class='elsewhere' aria-label='Eurth elsewhere'><ul>{links}"
-            f"<li><a href='{base}news.rss'><span class='n'>RSS feed</span><span class='d'>news.eurth.org</span></a></li>"
-            f"</ul></nav>"
-            f"<p class='paper-row js-only'><button type='button' class='btn paper-btn' id='paper' aria-pressed='false' "
-            f"aria-describedby='paper-note'>Orioni mode</button><span id='paper-note'>Newsprint paper, the way the "
-            f"Orioni press likes it.</span></p>"
-            f"<p class='legal'>{esc(RIGHTS)} The stories are © their authors, the members of Eurth who posted them on "
-            f"eurth.org. Nothing here may be copied, republished or used for text and data mining or AI training "
-            f"without written permission.</p>"
-            f"<p class='legal'>Members sometimes put images and other material from other websites in their stories, "
-            f"linked or copied. Eurth doesn't own or check that material and isn't responsible for it; its rights stay "
-            f"with whoever holds them. If something of yours appears here without your permission, flag the original "
-            f"post on eurth.org; once it comes down there, it's gone from here at the next update.</p></footer>")
+def first_image(cooked):
+    p = Lines()
+    p.feed(cooked)
+    p.close()
+    return next((im for im in p.images if im["src"].startswith("http")), None)
 
 
-def build_html(items):
+def fetch_periodicals():
+    """The latest issue of each periodical, for the footer; a periodical that can't be read is shown without one."""
+    papers = []
+    for tid, name, blurb in PERIODICALS:
+        paper = {"name": name, "blurb": blurb, "url": f"{SITE}/t/{tid}/last", "issue": "", "date": "", "image": None}
+        try:
+            last = get_json(f"{SITE}/t/{tid}.json")["post_stream"]["stream"][-1]
+            post = get_json(f"{SITE}/posts/{last}.json")
+            cooked = fix_urls(fix_images(post.get("cooked") or ""))
+            story = extract(cooked, name)
+            # The first picture is the periodical's own: The Eurth Weekly's banner, Rhyme Magazine's cover.
+            paper.update(issue=story["headline"], date=post.get("created_at", ""), image=first_image(cooked) or story["image"])
+        except Exception:
+            pass
+        papers.append(paper)
+    return papers
+
+
+def footer(papers, base=""):
+    links = "".join(f"<li><a href='{href}'>{icon(ic)}<span class='n'>{esc(name)}</span><span class='d'>{esc(where)}</span>"
+                    f"</a></li>" for name, where, href, ic in FOOTER_NAV)
+    issues = ""
+    for p in papers:
+        im = p["image"]
+        cover = (f"<img src='{esc(im['src'])}' alt='' loading='lazy' decoding='async' referrerpolicy='no-referrer'>"
+                 if im else orb(base, 84))
+        latest = (f"<span class='p-issue'>Latest: {esc(p['issue'])}" + (f" · {esc(fmt_date(p['date']))}" if p["date"] else "")
+                  + "</span>") if p["issue"] else ""
+        wide = " class='wide'" if im and im["w"] and im["h"] and im["w"] > 1.6 * im["h"] else ""
+        issues += (f"<li><a href='{esc(p['url'])}'{wide}><span class='cover'>{cover}</span><span class='p-name'>{esc(p['name'])}</span>"
+                   f"<span class='p-blurb'>{esc(p['blurb'])}</span>{latest}"
+                   f"<span class='p-go'>Read the latest issue{icon('arrow-right')}</span></a></li>")
+    return (f"<footer class='sitefoot'><div class='foot-grid'>"
+            f"<section class='foot-about' aria-labelledby='f-about'>{orb(base, 40)}"
+            f"<h2 class='foot-title' id='f-about'>Eurth News Network</h2>"
+            f"<p>The newest stories from The Newsroom on eurth.org, side by side. Everything here is fiction, written by the "
+            f"members of Eurth, the Worldbuilding &amp; Roleplay Writing Community; each story appears as its agency "
+            f"published it.</p><a class='btn' href='{base}news.rss'>{icon('rss')}RSS feed</a></section>"
+            f"<nav class='foot-col' aria-labelledby='f-eurth'><h2 class='col-h' id='f-eurth'>{icon('globe')}Eurth</h2>"
+            f"<ul class='foot-links'>{links}</ul></nav>"
+            f"<section class='foot-col foot-papers' aria-labelledby='f-papers'>"
+            f"<h2 class='col-h' id='f-papers'>{icon('book-open')}Our periodicals</h2><ul class='papers'>{issues}</ul></section>"
+            f"</div><div class='foot-legal'>"
+            f"<p>{esc(RIGHTS)} The stories are © their authors, the members of Eurth who posted them on eurth.org. Nothing "
+            f"here may be copied, republished or used for text and data mining or AI training without written permission.</p>"
+            f"<p>Members sometimes put images and other material from other websites in their stories, linked or copied. "
+            f"Eurth doesn't own or check that material and isn't responsible for it; its rights stay with whoever holds them. "
+            f"If something of yours appears here without your permission, flag the original post on eurth.org; once it comes "
+            f"down there, it's gone from here at the next update.</p></div></footer>")
+
+
+def chrome_bits():
+    """What every page carries once: the icon sprite, the tooltip, the toast and the theme icons."""
+    return f"<div class='tip' id='tip' role='tooltip' hidden></div><p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
+
+
+def build_html(items, papers):
     now = datetime.datetime.now(datetime.timezone.utc)
     nations = {}
     for s in items:
@@ -1357,13 +1851,15 @@ def build_html(items):
 
     feed = ""
     if len(items) > FRONT:
-        feed = (f'<h2 class="group-h">More stories</h2>'
+        feed = (f'<h2 class="group-h">{icon("layer-group")}More stories</h2>'
                 f'<div class="cards">{"".join(card(s, i) for i, s in enumerate(items))}</div>')
     front = ""
     if items:
-        front = (f'<section class="front" id="top" aria-label="Top stories">{lead_story(items[0])}'
-                 f'<div class="latest"><h2 class="col-h">Also new</h2>'
-                 f'{"".join(side_story(items[i], i) for i in range(1, min(FRONT, len(items))))}</div></section>')
+        front = (f'<section class="top-stories" id="top" aria-labelledby="top-h">'
+                 f'<h2 class="group-h" id="top-h">{icon("newspaper")}Top stories</h2>'
+                 f'<div class="front">{lead_story(items[0])}'
+                 f'<div class="latest"><h2 class="col-h">{icon("bolt")}Also new</h2>'
+                 f'{"".join(side_story(items[i], i) for i in range(1, min(FRONT, len(items))))}</div></div></section>')
 
     ranked = sorted(range(len(items)), key=lambda i: -items[i]["readers"])[:5]
     top = max([items[i]["readers"] for i in ranked] or [1]) or 1
@@ -1382,9 +1878,10 @@ def build_html(items):
     )
     rail = ""
     if most_read:
-        rail += f'<section id="most-read"><h2 class="col-h">Most read</h2><ol class="mostread">{most_read}</ol></section>'
+        rail += (f'<section id="most-read"><h2 class="col-h">{icon("fire-flame-curved")}Most read</h2>'
+                 f'<ol class="mostread">{most_read}</ol></section>')
     if chips:
-        rail += (f'<section class="js-only" id="nations"><h2 class="col-h">Nations in this edition</h2>'
+        rail += (f'<section class="js-only" id="nations"><h2 class="col-h">{icon("flag")}Nations in this edition</h2>'
                  f'<ul class="nations">{chips}</ul></section>')
 
     data = [{
@@ -1394,12 +1891,13 @@ def build_html(items):
     } for s in items]
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     bodies = "".join(f'<template id="b{i}">{s["cooked"]}</template>' for i, s in enumerate(items))
+    stamp = now.isoformat(timespec="seconds")
 
     return (
         f"<!doctype html><html lang='en'>"
         + head("Eurth News Network", "Eurth News Network", DESCRIPTION, PAGE_URL, SHARE_CARD, "",
                "<meta property='og:type' content='website'><meta name='referrer' content='no-referrer'>")
-        + f"<body><a class='skip' href='#main'>Skip to stories</a>"
+        + f"<body>{SPRITE}<a class='skip' href='#main'>Skip to stories</a>"
         f"<div class='paper'>"
         f"  <header>{topbar(now)}"
         f"    <div class='masthead'><h1 class='title'>Eurth News Network</h1>"
@@ -1407,25 +1905,28 @@ def build_html(items):
         f"  {bar('', SEARCH)}"
         f"  <main id='main'>"
         f"    <div class='toolbar'><p class='edition'><strong>{plural(len(items), 'story')}</strong> from "
-        f"{plural(len(agencies), 'agency')} in {plural(len(nations), 'nation')}<span class='new-count' hidden></span></p></div>"
+        f"{plural(len(agencies), 'agency')} in {plural(len(nations), 'nation')} · updated <time datetime='{stamp}' "
+        f"data-rel>{now:%H:%M} <abbr title='Coordinated Universal Time'>UTC</abbr></time> · "
+        f"<a href='news.rss'>RSS feed</a><span class='new-count' hidden></span></p></div>"
         f"    <p class='filter-note' hidden><span class='filter-text' role='status'></span>"
-        f"      <button type='button' class='btn clear-filters'>Clear</button></p>"
+        f"      <button type='button' class='btn clear-filters'>{icon('xmark')}Clear</button></p>"
         f"    {front}"
         f"    <div class='body-grid'>"
         f"      <div class='feed' id='more'>{feed}"
-        f"        <p class='empty' hidden>No stories match. <button type='button' class='btn clear-filters'>Clear search</button></p>"
+        f"        <p class='empty' hidden>No stories match. <button type='button' class='btn clear-filters'>"
+        f"{icon('xmark')}Clear search</button></p>"
         f"      </div>"
         f"      <aside class='rail' aria-label='Most read and nations'>{rail}</aside>"
         f"    </div>"
         f"  </main>"
-        f"  {footer()}"
+        f"  {footer(papers)}"
         f"</div>"
         f"<dialog id='reader' aria-labelledby='r-title'><div class='r-scroll'>"
         f"  <div class='r-bar'>"
-        f"    <button type='button' class='btn' id='r-close'>Close</button>"
+        f"    <button type='button' class='btn' id='r-close'>{icon('xmark')}Close</button>"
         f"    <span class='r-pos' id='r-pos'></span>"
-        f"    <button type='button' class='btn' id='r-prev'>&larr; Newer<span class='sr'> story</span></button>"
-        f"    <button type='button' class='btn' id='r-next'>Older<span class='sr'> story</span> &rarr;</button>"
+        f"    <button type='button' class='btn' id='r-prev'>{icon('arrow-left')}Newer<span class='sr'> story</span></button>"
+        f"    <button type='button' class='btn' id='r-next'>Older<span class='sr'> story</span>{icon('arrow-right')}</button>"
         f"  </div>"
         f"  <article class='r-article'>"
         f"    <p class='kicker' id='r-kicker'></p>"
@@ -1435,13 +1936,14 @@ def build_html(items):
         f"<span>· <span id='r-min'></span> <abbr title='minutes'>min</abbr> read</span></p>"
         f"    <p class='r-source'>As published by <span id='r-agency'></span></p>"
         f"    <div class='prose' id='r-body'></div>"
-        f"    <div class='r-foot'><a class='cta' id='r-link' href='{SITE}'>Read and discuss on Eurth"
-        f"<span class='sr r-what'></span></a><a class='btn' id='r-page' href='./'>Story page<span class='sr r-what'></span></a>"
-        f"<button type='button' class='btn' id='r-copy'>Copy link</button></div>"
+        f"    <div class='r-foot'><a class='cta' id='r-link' href='{SITE}'>{icon('comments')}Read and discuss on Eurth"
+        f"<span class='sr r-what'></span></a><a class='btn' id='r-page' href='./'>{icon('file-lines')}Story page"
+        f"<span class='sr r-what'></span></a><button type='button' class='btn' id='r-copy'>"
+        f"{icon('link', 'i i-link')}{icon('check', 'i i-check')}<span class='lbl'>Copy link</span></button></div>"
         f"    <p class='sr' id='announce' aria-live='polite'></p>"
         f"  </article>"
         f"</div></dialog>"
-        f"<p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
+        f"{chrome_bits()}"
         f"<script type='application/json' id='stories-data'>{data_json}</script>"
         f"{bodies}"
         f"<script>(function () {{{BASE_SCRIPT}{SCRIPT}}})();</script>"
@@ -1451,14 +1953,14 @@ def build_html(items):
 
 def comments(s):
     """Discourse's embedded discussion for this story's page (see README: Comments)."""
-    return (f"<section class='comments' id='comments' aria-label='Discussion'><h2 class='col-h'>Discussion</h2>"
+    return (f"<section class='comments' id='comments' aria-label='Discussion'><h2 class='col-h'>{icon('comments')}Discussion</h2>"
             f"<div id='discourse-comments'></div></section>"
             f"<script>window.DiscourseEmbed={{discourseUrl:'{SITE}/',discourseEmbedUrl:'{PAGE_URL}{page_path(s)}'}};"
             f"(function(){{var d=document.createElement('script');d.async=true;"
             f"d.src=DiscourseEmbed.discourseUrl+'javascripts/embed.js';document.head.appendChild(d);}})();</script>")
 
 
-def build_story(items, i):
+def build_story(items, i, papers):
     """A story's own page: shareable, readable without JS, and the anchor for embedded comments."""
     s, base = items[i], "../../"
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -1473,16 +1975,16 @@ def build_story(items, i):
 
     pager = ""
     if i > 0:
-        pager += (f"<a class='newer' href='{base}{page_path(items[i - 1])}'><span class='k'>&larr; Newer story</span>"
-                  f"<span class='t'>{esc(items[i - 1]['headline'])}</span></a>")
+        pager += (f"<a class='newer' href='{base}{page_path(items[i - 1])}'><span class='k'>{icon('arrow-left')}Newer story"
+                  f"</span><span class='t'>{esc(items[i - 1]['headline'])}</span></a>")
     if i < len(items) - 1:
-        pager += (f"<a class='older' href='{base}{page_path(items[i + 1])}'><span class='k'>Older story &rarr;</span>"
-                  f"<span class='t'>{esc(items[i + 1]['headline'])}</span></a>")
+        pager += (f"<a class='older' href='{base}{page_path(items[i + 1])}'><span class='k'>Older story{icon('arrow-right')}"
+                  f"</span><span class='t'>{esc(items[i + 1]['headline'])}</span></a>")
 
     return (
         f"<!doctype html><html lang='en'>"
         + head(f"{title} · Eurth News Network", s["headline"], description, url, story_image(s), base, extra)
-        + f"<body><a class='skip' href='#story'>Skip to story</a>"
+        + f"<body>{SPRITE}<a class='skip' href='#story'>Skip to story</a>"
         f"<div class='paper'>"
         f"  <header>{topbar(now, base)}"
         f"    <div class='masthead slim'><a class='title' href='{base}'>Eurth News Network</a></div></header>"
@@ -1496,14 +1998,14 @@ def build_story(items, i):
         f"<span>· {time_tag(s['date'])}</span><span>· {minutes(s['minutes'])}</span></p>"
         f"      <p class='r-source'>As published by {esc(s['agency'])}</p>"
         f"      <div class='prose'>{s['cooked']}</div>"
-        f"      <div class='r-foot'><a class='cta' href='{esc(s['url'])}'>Read and discuss on Eurth"
-        f"<span class='sr'>: {esc(s['headline'])}</span></a><a class='btn' href='{base}'>Front page</a></div>"
+        f"      <div class='r-foot'><a class='cta' href='{esc(s['url'])}'>{icon('comments')}Read and discuss on Eurth"
+        f"<span class='sr'>: {esc(s['headline'])}</span></a><a class='btn' href='{base}'>{icon('newspaper')}Front page</a></div>"
         f"    </article>"
         f"    {comments(s) if EMBED_COMMENTS else ''}"
         f"    <nav class='pager' aria-label='Newer and older stories'>{pager}</nav>"
         f"  </main>"
-        f"  {footer(base)}"
-        f"</div><p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
+        f"  {footer(papers, base)}"
+        f"</div>{chrome_bits()}"
         f"<script>(function () {{{BASE_SCRIPT}}})();</script></body></html>"
     )
 
@@ -1520,11 +2022,12 @@ def main():
     shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"), f"{OUTDIR}/static",
                     dirs_exist_ok=True)
     items = fetch_stories()
-    write(f"{OUTDIR}/index.html", build_html(items))
+    papers = fetch_periodicals()
+    write(f"{OUTDIR}/index.html", build_html(items, papers))
     write(f"{OUTDIR}/oembed.json", oembed("Eurth News Network", SHARE_CARD))
     for i, s in enumerate(items):
         page = f"{OUTDIR}/{page_path(s)}"
-        write(page + "index.html", build_story(items, i))
+        write(page + "index.html", build_story(items, i, papers))
         write(page + "oembed.json", oembed(s["headline"], story_image(s), (s["nation"], f"{SITE}/u/{s['author']}")))
     write(f"{OUTDIR}/news.rss", build_rss(items))
     write(f"{OUTDIR}/.well-known/tdmrep.json", json.dumps([{"location": "/", "tdm-reservation": 1}]))
