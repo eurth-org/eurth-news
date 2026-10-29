@@ -1,7 +1,7 @@
 name: Update Newsroom Feed
 on:
   schedule:
-    - cron: "*/120 * * * *"   # every 120 minutes
+    - cron: "0 */2 * * *"   # every 2 hours, on the hour
   workflow_dispatch: {}
   push:
     branches: [main]
@@ -26,6 +26,7 @@ jobs:
       - name: Generate feed
         env:
           DISCOURSE_API_KEY: ${{ secrets.DISCOURSE_API_KEY }}
+          EMBED_COMMENTS: ${{ vars.EMBED_COMMENTS }}
         run: python newsroom.py
       - uses: actions/upload-pages-artifact@v3
         with:
