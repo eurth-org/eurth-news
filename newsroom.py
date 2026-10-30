@@ -399,8 +399,8 @@ def build_rss(items):
 # Font Awesome icons and line-md's animated sun and moon. The page frame is Eurth's own (OOC); the
 # stories inside keep their agencies' words, never their branding. Built to WCAG 2.2 AAA: 7:1 text
 # contrast in every theme and state (one named brand exception: white on Eurth blue for the call to
-# action, 3.2:1 at 19px bold), 44px targets, and a Pause motion switch for everything that moves on its
-# own; visitors who ask their device for reduced motion get it paused.
+# action, 3.2:1 at 19px bold), 44px targets; nothing moves for visitors who ask their device for reduced
+# motion. Known gap: there's no on-page pause for the turning globe, icons and seconds (WCAG 2.2.2).
 
 FONTS = ("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400"
          "&family=JetBrains+Mono:wght@400;700&display=swap")
@@ -551,11 +551,10 @@ FA = {
             '8 7.2 16 16 16h48c8.8 0 16-7.2 16-16s-7.2-16-16-16H384c-8.8 0-16 7.2-16 16zM160 304c0 8.8 7.2 16'
             ' 16 16H432c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16zm0 96c0 8.8 7.2 16 16 16H432'
             'c8.8 0 16-7.2 16-16s-7.2-16-16-16H176c-8.8 0-16 7.2-16 16z'),
-    "pause": ("0 0 320 512", 'M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-'
-            '48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.'
-            '5-21.5-48-48-48H240z'),
-    "play": ("0 0 384 512", 'M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361'
-            ' 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z'),
+    "pen-fancy": ("0 0 512 512", 'M373.5 27.1C388.5 9.9 410.2 0 433 0c43.6 0 79 35.4 79 79c0 22.8-9.9 44.6-27.1 59.6L277.7 319l-10'
+            '.3-10.3-64-64L193 234.3 373.5 27.1zM170.3 256.9l10.4 10.4 64 64 10.4 10.4-19.2 83.4c-3.9 17.1-16'
+            '.9 30.7-33.8 35.4L24.4 510.3l95.4-95.4c2.6 .7 5.4 1.1 8.3 1.1c17.7 0 32-14.3 32-32s-14.3-32-32-3'
+            '2s-32 14.3-32 32c0 2.9 .4 5.6 1.1 8.3L1.7 487.6 51.5 310c4.7-16.9 18.3-29.9 35.4-33.8l83.4-19.2z'),
     "rss": ("0 0 448 512", 'M0 64C0 46.3 14.3 32 32 32c229.8 0 416 186.2 416 416c0 17.7-14.3 32-32 32s-32-14.3-32-32C384 253'
             '.6 226.4 96 32 96C14.3 96 0 81.7 0 64zM0 416a64 64 0 1 1 128 0A64 64 0 1 1 0 416zM32 160c159.1 0'
             ' 288 128.9 288 288c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-123.7-100.3-224-224-224c-17.7 0-32-14.3'
@@ -581,7 +580,7 @@ MENU = [("Top stories", "top", "newspaper"), ("More stories", "more", "layer-gro
 
 # Sun, moon and auto from line-md by Vjacheslav Trushkin (MIT), as in Deluminator and on gov.eurth.org:
 # switching morphs one into the other, then the sun's rays turn and the stars twinkle. The "-still" versions
-# are for Pause motion and reduced motion.
+# are for reduced motion.
 LINE_MD = (
     # light-dark-loop
     '<template id=\'i-auto\'><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" v'
@@ -748,23 +747,21 @@ THEME_ICONS = LINE_MD + (
 
 
 def tip_button(id_, cls, label, tip, inner, extra=""):
-    """A header control with a tooltip that shows on hover and keyboard focus and goes with Escape (WCAG 1.4.13)."""
+    """A control with a tooltip that shows on hover and keyboard focus and goes with Escape (WCAG 1.4.13)."""
     return (f"<button type='button' class='{cls} js-only' id='{id_}' aria-label='{esc(label)}' data-tip='{esc(tip)}'"
             f"{extra}>{inner}</button>")
 
 
 THEME_BUTTON = tip_button("theme", "hdr-btn theme-btn", "Theme", "label",
                           "<span class='theme-icon' aria-hidden='true'></span>")
-MOTION_BUTTON = tip_button(
-    "motion", "hdr-btn motion-btn", "Pause motion",
-    "Pause motion: stops the spinning globe, the moving icons, the seconds on the clock and the smooth scrolling. "
-    "It's remembered for your next visit; a device set to reduce motion starts with it on.",
-    icon("pause", "i i-pause") + icon("play", "i i-play"), " aria-pressed='false'")
+ORIONI_TIP = ("Orioni mode: warm newsprint paper instead of white, like the FT or De Tijd, the way the Orioni press likes "
+              "it. It colours the light theme only, so turning it on leaves dark mode.")
+O_MODE_BUTTON = tip_button("omode", "hdr-btn o-btn", "O-Mode", ORIONI_TIP, icon("pen-fancy") + "<span>O-Mode</span>",
+                           " aria-pressed='false'")
 PAPER_SWITCH = tip_button(
-    "paper", "o-switch", "Orioni mode",
-    "Orioni mode: warm newsprint paper instead of white, like the FT or De Tijd, the way the Orioni press likes it. "
-    "It colours the light theme only, so turning it on leaves dark mode.",
-    "<span class='o-track' aria-hidden='true'><span class='o-knob'>O</span></span>", " role='switch' aria-checked='false'")
+    "paper", "o-switch", "Orioni mode", ORIONI_TIP,
+    "<span class='o-track' aria-hidden='true'><span class='o-knob'>O</span></span><span class='o-label'>Orioni mode</span>",
+    " role='switch' aria-checked='false'")
 
 SEARCH = ("<div class='search js-only' role='search'><label class='sr' for='q'>Search stories</label>"
           + icon("magnifying-glass", "search-i") +
@@ -820,12 +817,11 @@ TOPICS = [  # (topic, icon, map, words), the topic with the most matching words 
 # Theme surfaces for the browser's own chrome (address bar), set before the page paints.
 CHROME = {"light": "#ffffff", "paper": "#fcf6e1", "dark": "#002b36"}
 
-HEAD_SCRIPT = """(function(){var d=document.documentElement,m=window.matchMedia,t=null,p=null,c=null;
-try{t=localStorage.getItem("enn:theme");p=localStorage.getItem("enn:paper");c=localStorage.getItem("enn:motion")}catch(e){}
+HEAD_SCRIPT = """(function(){var d=document.documentElement,m=window.matchMedia,t=null,p=null;
+try{t=localStorage.getItem("enn:theme");p=localStorage.getItem("enn:paper")}catch(e){}
 var dark=t==="dark"||(t!=="light"&&!!m&&m("(prefers-color-scheme: dark)").matches);
 d.setAttribute("data-theme",dark?"dark":"light");if(p==="1")d.setAttribute("data-paper","");
-var calm=c==="paused",less=!!m&&m("(prefers-reduced-motion: reduce)").matches;
-d.className+=" js"+(calm?" calm":"")+(calm||less?"":" anim");
+d.className+=" js"+(!!m&&m("(prefers-reduced-motion: reduce)").matches?"":" anim");
 var e=document.getElementById("theme-color");if(e)e.setAttribute("content",dark?"%s":p==="1"?"%s":"%s")})();""" % (
     CHROME["dark"], CHROME["paper"], CHROME["light"])
 
@@ -849,7 +845,7 @@ CSS = """
 @media (prefers-color-scheme:dark){:root:not([data-theme]){@@DARK@@}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--bar-h) + 16px)}
-@media (prefers-reduced-motion:no-preference){html:not(.calm){scroll-behavior:smooth}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;background:var(--surface);color:var(--ink);font:16px/1.5 var(--sans)}
 [hidden]{display:none!important}
 html:not(.js) .js-only{display:none!important}
@@ -863,10 +859,9 @@ abbr[title]{text-decoration:none}
 .tap{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
 .i{display:inline-block;flex:none;width:1em;height:1em;fill:currentColor;vertical-align:-.125em}
 
-/* The globe: a 240-frame strip, always turning unless motion is paused */
+/* The globe: a 240-frame strip, always turning (still for reduced motion) */
 .orb{display:block;flex:none;width:var(--s);height:var(--s);background:0 0/var(--s) auto no-repeat;
   animation:orb 9.6s steps(240) infinite}
-.calm .orb{animation-play-state:paused}
 @keyframes orb{to{background-position:0 calc(var(--s) * -240)}}
 
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);
@@ -882,13 +877,16 @@ abbr[title]{text-decoration:none}
 .hdr-btn:hover{background:var(--surface-raised)}
 .hdr-btn:active{transform:scale(.92)}
 .theme-icon,.theme-icon svg{display:block;width:22px;height:22px}
-.motion-btn .i{width:14px;height:14px}
-.motion-btn .i-play,.motion-btn[aria-pressed=true] .i-pause{display:none}
-.motion-btn[aria-pressed=true] .i-play{display:inline-block}
-.motion-btn[aria-pressed=true]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+/* O-Mode: the header's shortcut to Orioni mode, a fountain pen on newsprint when on */
+.o-btn{width:auto;gap:8px;padding:0 14px;font:700 13px/20px var(--sans)}
+.o-btn .i{width:15px;height:15px}
+.o-btn[aria-pressed=true]{background:var(--parchment);color:#222222;border-color:var(--ink)}
 /* Orioni mode: an O that rolls along its track */
-.o-switch{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;margin:4px 0;padding:0 2px;
-  border:0;background:transparent;color:var(--ink);cursor:pointer}
+.o-switch{display:inline-flex;align-items:center;gap:12px;min-height:44px;margin:0;padding:0;border:0;background:transparent;
+  color:var(--ink);font:700 15px/20px var(--sans);cursor:pointer}
+.o-switch:hover .o-label{text-decoration:underline;text-underline-offset:3px}
+.foot-mode{margin-top:20px}
+.foot-about .o-note{font-size:14px;line-height:20px;margin:4px 0 0}
 .o-track{position:relative;display:block;width:54px;height:30px;border-radius:999px;border:1px solid var(--line-strong);
   background:var(--surface-raised);transition:background-color .3s,border-color .3s}
 .o-knob{position:absolute;top:3px;left:3px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;
@@ -1221,8 +1219,7 @@ BASE_SCRIPT = """
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var root = document.documentElement;
   var lessMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : null;
-  function calm() { return root.classList.contains("calm"); }
-  function still() { return calm() || !!(lessMotion && lessMotion.matches); }
+  function still() { return !!(lessMotion && lessMotion.matches); }
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function save(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
@@ -1249,7 +1246,7 @@ BASE_SCRIPT = """
   }
 
   // Today's date and the reader's local time, to the second, with the separators blinking every other second as on
-  // a Mac; with motion paused it shows minutes only (WCAG 2.2.2).
+  // a Mac; for reduced motion it shows minutes only.
   var clock = $("#clock"), lastMinute = -1, clockTimer = 0;
   var today = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" });
   var withSecs = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short" });
@@ -1280,7 +1277,7 @@ BASE_SCRIPT = """
     clockTimer = setTimeout(render, secs ? 1000 - t % 1000 : 60000 - t % 60000);
   }
 
-  // The favicon is the globe too, turning in the tab (as on gov.eurth.org) unless motion is paused.
+  // The favicon is the globe too, turning in the tab (as on gov.eurth.org), still for reduced motion.
   var fav = $("#favicon"), favTimer = 0, favSprite = null;
   function favicon() {
     clearInterval(favTimer);
@@ -1355,7 +1352,7 @@ BASE_SCRIPT = """
   // Auto, light, dark and Orioni mode (after github.com/stijn/deluminator and gov.eurth.org). Auto follows the
   // device and is remembered by forgetting the choice; each click moves on: from auto it flips the page, then keeps
   // the device's look even if the device changes, then returns to auto. Open tabs keep in step.
-  var themeBtn = $("#theme"), paperBtn = $("#paper"), motionBtn = $("#motion"), chrome = $("#theme-color"),
+  var themeBtn = $("#theme"), paperBtns = $$("#paper, #omode"), chrome = $("#theme-color"),
       toastEl = $("#toast"), sys = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
   var NAMES = { auto: "auto, as your device is set", light: "light, always", dark: "dark, always" };
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
@@ -1377,7 +1374,7 @@ BASE_SCRIPT = """
     if (chrome) chrome.setAttribute("content", dark ? "@@DARK@@" : paper ? "@@PAPER@@" : "@@LIGHT@@");
     var m = mode(), label = "Theme: " + NAMES[m] + ". Switch to " + after(m) + ".";
     themeBtn.setAttribute("aria-label", label);
-    if (paperBtn) paperBtn.setAttribute("aria-checked", String(paper && !dark));
+    paperBtns.forEach(function (b) { b.setAttribute(b.id === "paper" ? "aria-checked" : "aria-pressed", String(paper && !dark)); });
     var name = m === "auto" ? "auto" : dark ? "moon" : "sun";
     var id = still() ? name + "-still" : m !== "auto" && how ? how : name;
     $(".theme-icon", themeBtn).replaceChildren(document.getElementById("i-" + id).content.cloneNode(true));
@@ -1412,35 +1409,24 @@ BASE_SCRIPT = """
     if (dark === isDark()) { paint(dark, isPaper()); return; }
     reveal(themeBtn, e, !dark, function () { paint(dark, isPaper(), dark ? "to-dark" : "to-light"); });
   });
-  if (paperBtn) paperBtn.addEventListener("click", function (e) {
-    var paper = !(isPaper() && !isDark()), wasDark = isDark();
-    save("enn:paper", paper ? "1" : "0");
-    if (paper && wasDark) save("enn:theme", "light");
-    toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
-    reveal(paperBtn, e, paper, function () { paint(paper ? false : wasDark, paper, paper && wasDark ? "to-light" : ""); });
+  // Orioni mode has two controls: the O-Mode button in the header and the switch in the footer.
+  paperBtns.forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      var paper = !(isPaper() && !isDark()), wasDark = isDark();
+      save("enn:paper", paper ? "1" : "0");
+      if (paper && wasDark) save("enn:theme", "light");
+      toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
+      reveal(btn, e, paper, function () { paint(paper ? false : wasDark, paper, paper && wasDark ? "to-light" : ""); });
+    });
   });
   if (sys && sys.addEventListener) sys.addEventListener("change", function (e) { if (mode() === "auto") paint(e.matches, isPaper()); });
   addEventListener("storage", function (e) {
-    if (e.key === "enn:motion") { setMotion(e.newValue === "paused", true); return; }
     if (e.key !== "enn:theme" && e.key !== "enn:paper") return;
     var t = stored("enn:theme");
     paint(t === "dark" || (!t && !!sys && sys.matches), stored("enn:paper") === "1");
   });
 
-  // Pause motion: one switch for everything that moves on its own (WCAG 2.2.2), remembered for the next visit.
-  function setMotion(paused, quiet) {
-    root.classList.toggle("calm", paused);
-    if (motionBtn) motionBtn.setAttribute("aria-pressed", String(still()));
-    if (!quiet) { save("enn:motion", paused ? "paused" : null); toast(paused ? "Motion paused." : "Motion back on."); }
-    paint(isDark(), isPaper());
-    render();
-    favicon();
-  }
-  if (motionBtn) motionBtn.addEventListener("click", function () {
-    if (lessMotion && lessMotion.matches) { toast("Your device asks for reduced motion, so things stay still."); return; }
-    setMotion(!calm());
-  });
-  if (motionBtn) motionBtn.setAttribute("aria-pressed", String(still()));
+  save("enn:motion", null);  // left behind by the Pause motion switch, since removed
   paint(isDark(), isPaper());
   render();
   favicon();
@@ -1758,10 +1744,10 @@ def orb(base, size):
 
 
 def topbar(now, base=""):
-    """The globe and today's date (with the reader's local time once the script runs); motion, Orioni, theme."""
+    """The globe and today's date (with the reader's local time once the script runs); O-Mode and the theme."""
     return (f"<div class='topbar'><div><a class='tap orb-link' href='{SITE}' aria-label='eurth.org'>{orb(base, 32)}</a>"
             f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time></div>"
-            f"<div class='controls'>{MOTION_BUTTON}{PAPER_SWITCH}{THEME_BUTTON}</div></div>")
+            f"<div class='controls'>{O_MODE_BUTTON}{THEME_BUTTON}</div></div>")
 
 
 def bar(base="", search=""):
@@ -1822,7 +1808,9 @@ def footer(papers, base=""):
             f"<h2 class='foot-title' id='f-about'>Eurth News Network</h2>"
             f"<p>The newest stories from The Newsroom on eurth.org, side by side. Everything here is fiction, written by the "
             f"members of Eurth, the Worldbuilding &amp; Roleplay Writing Community; each story appears as its agency "
-            f"published it.</p><a class='btn' href='{base}news.rss'>{icon('rss')}RSS feed</a></section>"
+            f"published it.</p><a class='btn' href='{base}news.rss'>{icon('rss')}RSS feed</a>"
+            f"<div class='foot-mode js-only'>{PAPER_SWITCH}<p class='o-note'>Newsprint paper, the way the Orioni press "
+            f"likes it.</p></div></section>"
             f"<nav class='foot-col' aria-labelledby='f-eurth'><h2 class='col-h' id='f-eurth'>{icon('globe')}Eurth</h2>"
             f"<ul class='foot-links'>{links}</ul></nav>"
             f"<section class='foot-col foot-papers' aria-labelledby='f-papers'>"

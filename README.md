@@ -23,10 +23,9 @@ The page follows the **Eurth** design system (Claude Design): Libre Baskerville 
 
 A lead story without a photo gets a placeholder: the icon of its topic (conflict, diplomacy, politics, economy, health, science, culture or news, read from its headline and standfirst) over one of Eurth's own maps in the system's horizon disc. No people and no real places, so it suits whichever nation the story comes from.
 
-The header carries three controls:
+The header carries two controls:
 
-- **Pause motion** stops everything that moves on its own: the globes, the favicon, the icons' animation, the clock's seconds and blinking, and smooth scrolling. Remembered; on from the start for devices set to reduce motion.
-- **Orioni mode**, an O that rolls along its switch: warm newsprint parchment instead of white, in the spirit of the FT and De Tijd. Light theme only.
+- **O-Mode** (Font Awesome's fountain pen) turns on Orioni mode: warm newsprint parchment instead of white, in the spirit of the FT and De Tijd. Light theme only. The footer has the same as a switch, an O that rolls along its track, under the RSS feed.
 - **The theme switch**, after [Deluminator](https://github.com/stijn/deluminator) and [Governmint](https://gov.eurth.org/): auto follows the device, and each click moves on (from auto it flips the page, then keeps the device's look, then returns to auto). The mode is set before the page paints, and the new look grows out of the button in a circle (View Transitions). Its icons are [line-md](https://github.com/cyberalien/line-md)'s (MIT): the sun morphs into the moon and back, the rays turn and the stars twinkle.
 
 Each control explains itself in a tooltip that appears on hover and keyboard focus, stays while pointed at, and goes with Escape.
@@ -41,7 +40,8 @@ Built and tested to **WCAG 2.2 AAA**, checked with axe-core (every A, AA, AAA an
 
 - 7:1 contrast for all text in every look and state, including the card hover background; 3:1 for control borders and focus rings. One named exception, a brand decision: "Read and discuss on Eurth" is white on Eurth blue (3.2:1 at 19px bold, which the Eurth system and WCAG AA allow for large text, but not AAA's 4.5:1).
 - 44 x 44 px minimum targets; a 2px focus ring; the sticky bar never covers the focused element.
-- Everything that moves on its own can be paused with one switch (WCAG 2.2.2); no new tabs; read and new stories are marked in text, not just colour; tooltips follow WCAG 1.4.13.
+- No new tabs; read and new stories are marked in text, not just colour; tooltips follow WCAG 1.4.13.
+- A second known exception, by choice: the globes, the favicon, the theme icon and the clock's seconds keep moving with no pause on the page, so WCAG 2.2.2 is met only for visitors whose device asks for reduced motion (for them nothing moves).
 - Article text at most ~70 characters wide, 1.6 line height, paragraph spacing 1.5 times the line height; agencies' own text colours and justification give way to the theme.
 - Landmarks, a skip link, breadcrumbs on story pages, link text that names its story, abbreviations with their expansions.
 - Works without JavaScript (stories link to their own pages) and reflows to 320px.

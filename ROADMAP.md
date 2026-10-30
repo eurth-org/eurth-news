@@ -17,7 +17,7 @@ Eurth News Network is the front page of The Newsroom on eurth.org: the newest st
 | **0. Feed** | A paper-style page and RSS feed of the 25 newest Newsroom stories, rebuilt by GitHub Actions | Done (Sep 2026) |
 | **1. Front page** | Headlines read from each post, lead story, grid, Most read, nation filter, search, reader, story pages | Done (#1) |
 | **2. Eurth design system** | Tokens, type, globe, icons, light and night, Orioni mode | Done (#1–#6) |
-| **3. Accessibility** | WCAG 2.2 AAA in every look and state, tested with axe-core | Done (#3); kept since |
+| **3. Accessibility** | WCAG 2.2 AAA in every look and state, tested with axe-core | Done (#3); two named exceptions since #6 and #7 |
 | **4. Sharing** | Open Graph and X cards, oEmbed, a share card, RSS with real headlines | Done (#1) |
 | **5. Rights** | All rights reserved, text-and-data-mining reservation, disclaimer for members' borrowed images | Done (#4, #5) |
 | **6. Discussion** | Discourse comments under each story page | Built, switched off: waits for Admin › Embedding on eurth.org |
@@ -34,7 +34,8 @@ Times in CET.
 | #3 Feedback round 2 (`8da9f91`) | 29 Oct 2026, 11:33 | 2.1–2.5.1: WCAG 2.2 AAA, light/dark switch, arrival animations, Orioni mode |
 | #4 Feedback round 3 (`9ee3d51`) | 29 Oct 2026, 21:25 | 6–10: copyright, auto theme, seconds clock, search icon, footer links |
 | #5 Feedback round 4 (`29701a5`) | 29 Oct 2026, 23:20 | 11: disclaimer for images members take from other websites |
-| #6 Feedback round 5 | 29 Oct 2026 | 12–22: line-md icons, Orioni switch in the header, Pause motion, placeholder images, icons, footer columns with periodicals, spinning favicon, smooth scrolling, this roadmap |
+| #6 Feedback round 5 (`9cee418`) | 29 Oct 2026, 23:52 | 12–22: line-md icons, Orioni switch in the header, Pause motion, placeholder images, icons, footer columns with periodicals, spinning favicon, smooth scrolling, this roadmap |
+| #7 Feedback round 6 | 30 Oct 2026 | 20–21 (round 6): Pause motion taken out; the Orioni switch to the footer, an O-Mode button in the header |
 
 ## What's in so far
 
@@ -62,13 +63,13 @@ The update that added each item is in brackets.
 
 **Controls**
 - The theme switch: auto, light, dark, with line-md's morphing sun and moon and a circular reveal from the button (#3; auto and flash fix #4; line-md loops #6).
-- Orioni mode, an O that rolls along its switch (#3; switch in the header #6).
-- Pause motion for everything that moves on its own (#6).
+- Orioni mode: O-Mode, a fountain-pen button in the header, and an O that rolls along its switch in the footer (#3; switch #6; O-Mode and footer #7).
 - Tooltips that show on hover and focus, stay while pointed at, and go with Escape (#6).
 
 **Accessibility**
 - WCAG 2.2 AAA, tested with axe-core in all three looks, on the front page, in the reader and on story pages (#3; re-tested each update).
 - 7:1 text contrast in every look and state; one named exception, white on Eurth blue for "Read and discuss on Eurth" (#3; exception #6).
+- Nothing moves for reduced motion; without an on-page pause, WCAG 2.2.2 is a second named exception for everyone else (#7).
 - 44 px targets, a 2px focus ring, the sticky bar never hiding the focused element, landmarks, breadcrumbs, link text that names its story, abbreviations expanded, 1.4.8 line length and spacing, reflow to 320px, works without JavaScript (#3).
 
 **Sharing and rights**
@@ -103,8 +104,8 @@ Every request, in the order it was made, and the update that did it.
 | 10 | Footer links to the forums, map, Governmint and uptime | Done, with The Newsroom and the guidelines; "Terms" pointed at a 404 (#4) |
 | 11 | We're not responsible for images members hotlink or copy | Footer disclaimer with a takedown route; LICENSE claims no rights in them (#5) |
 | 12 | Animated line-md icons in the switch | The sun morphs into the moon and back; rays turn, stars twinkle (#6) |
-| 13 | Orioni mode as an O-themed switch in the header, explained in a tooltip | An O that rolls along its track, beside the theme switch (#6) |
-| 14 | The globe should always spin | Always turning; Pause motion stops it (WCAG 2.2.2) (#6) |
+| 13 | Orioni mode as an O-themed switch in the header, explained in a tooltip | An O that rolls along its track, beside the theme switch (#6); moved to the footer (#7) |
+| 14 | The globe should always spin | Always turning; Pause motion stops it (WCAG 2.2.2) (#6); the pause went again (#7) |
 | 15 | A placeholder for a lead story without a photo that suits any context, culture or place | The topic's icon over one of Eurth's own maps (#6) |
 | 16 | Font Awesome icons in the menu and their sections, not cheap | One small, muted size; Eurth blue in the headings (#6) |
 | 17 | A multi-column footer, with The Eurth Weekly and Rhyme Magazine | About, Eurth's sites, the periodicals with their latest issues (#6) |
@@ -113,6 +114,8 @@ Every request, in the order it was made, and the update that did it.
 | 20 | Smooth scrolling instead of jumps | Done, off with Pause motion or reduced motion (#6) |
 | 21 | Icons on the reader's buttons | Close, newer, older, discuss, story page, copy link (#6) |
 | 22 | "Read and discuss on Eurth" in Eurth blue with white text | Done; the site's one named contrast exception (#6) |
+| 20 (round 6) | Remove the pause button; nobody asked for it | Taken out, with its remembered setting; motion still stops for reduced motion, and WCAG 2.2.2 is now a named exception (#7) |
+| 21 (round 6) | The Orioni switch into the footer's first column, under the RSS feed; a second button, "O-Mode", with Font Awesome's `pen-fancy` | The switch, with its name beside it, under the RSS feed; O-Mode in the header does the same, and the two stay in step (#7) |
 
 ## Playbook for the next Eurth site
 
@@ -121,7 +124,7 @@ What this site settled, to reuse from the first day:
 1. **Start from the Eurth design system** in Claude Design: its tokens, Libre Baskerville, Helvetica, JetBrains Mono, the globe sprite and Font Awesome. The site's frame is Eurth's (out of character); never brand in-character content.
 2. **Light, night and auto from the start**, set before the page paints, with Deluminator's reveal and `fill: "forwards"` on its animation.
 3. **AAA from the start.** Pick each theme's palette for 7:1 against both the page and the hover background, make every target 44px, and test with axe-core in every look and state, not just the default. Name any brand exception out loud.
-4. **One Pause motion switch** for everything that moves on its own; nothing moves for reduced motion.
+4. **Respect reduced motion**: nothing moves for it. A Pause motion switch would meet WCAG 2.2.2 for everyone; it was tried in #6 and taken out in #7, as nobody had asked for it.
 5. **Tooltips** that show on hover and focus, stay while pointed at, and go with Escape.
 6. **Link previews**: Open Graph and X tags, a 1200 x 800 ShareCard, oEmbed JSON.
 7. **The footer**: what the site is, Eurth's other sites, the periodicals, copyright and the third-party disclaimer.
@@ -135,6 +138,7 @@ Not planned yet, but worth keeping:
 
 - Switch on the comments once eurth.org allows news.eurth.org under Admin › Embedding.
 - An AAA version of the call to action: white on `eurth-blue-deep` (#1b6fa0) is 5.5:1.
+- A quiet way to stop the turning globe and the seconds, to meet WCAG 2.2.2 for everyone again.
 - Decide whether to keep loading images with `no-referrer`, which also gets around other websites' hotlink protection.
 - Share cards drawn per story when there's no photo.
 - An archive beyond the newest 25, and pages per agency and per nation.
