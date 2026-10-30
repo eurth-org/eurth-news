@@ -35,7 +35,8 @@ Times in CET.
 | #4 Feedback round 3 (`9ee3d51`) | 29 Oct 2026, 21:25 | 6–10: copyright, auto theme, seconds clock, search icon, footer links |
 | #5 Feedback round 4 (`29701a5`) | 29 Oct 2026, 23:20 | 11: disclaimer for images members take from other websites |
 | #6 Feedback round 5 (`9cee418`) | 29 Oct 2026, 23:52 | 12–22: line-md icons, Orioni switch in the header, Pause motion, placeholder images, icons, footer columns with periodicals, spinning favicon, smooth scrolling, this roadmap |
-| #7 Feedback round 6 | 30 Oct 2026 | 20–21 (round 6): Pause motion taken out; the Orioni switch to the footer, an O-Mode button in the header |
+| #7 Feedback round 6 (`6d4eb2d`) | 30 Oct 2026, 02:13 | 20–21 (round 6): Pause motion taken out; the Orioni switch to the footer, an O-Mode button in the header |
+| #8 Feedback round 7 | 30 Oct 2026 | 22–24 (round 7): O-Mode out of the header; Orioni mode a button in the footer that works as a switch; periodical covers uncropped, tilting on hover |
 
 ## What's in so far
 
@@ -60,10 +61,11 @@ The update that added each item is in brackets.
 - Font Awesome icons in the menu, section headings, buttons and footer (#6).
 - The clock: local date and time, to the second, with separators blinking as on a Mac (#2; seconds #4).
 - The footer: about the site, Eurth's other sites, The Eurth Weekly and Rhyme Magazine with their latest issues, the small print (#4; columns and periodicals #6).
+- Periodical covers at their own proportions, leaning toward the pointer on hover (#8).
 
 **Controls**
 - The theme switch: auto, light, dark, with line-md's morphing sun and moon and a circular reveal from the button (#3; auto and flash fix #4; line-md loops #6).
-- Orioni mode: O-Mode, a fountain-pen button in the header, and an O that rolls along its switch in the footer (#3; switch #6; O-Mode and footer #7).
+- Orioni mode: a button beside the RSS feed in the footer that works as a switch, with a fountain pen that gives a flourish when it turns on; its tooltip explains it (#3; in the footer #7; a button #8).
 - Tooltips that show on hover and focus, stay while pointed at, and go with Escape (#6).
 
 **Accessibility**
@@ -116,6 +118,9 @@ Every request, in the order it was made, and the update that did it.
 | 22 | "Read and discuss on Eurth" in Eurth blue with white text | Done; the site's one named contrast exception (#6) |
 | 20 (round 6) | Remove the pause button; nobody asked for it | Taken out, with its remembered setting; motion still stops for reduced motion, and WCAG 2.2.2 is now a named exception (#7) |
 | 21 (round 6) | The Orioni switch into the footer's first column, under the RSS feed; a second button, "O-Mode", with Font Awesome's `pen-fancy` | The switch, with its name beside it, under the RSS feed; O-Mode in the header does the same, and the two stay in step (#7) |
+| 22 (round 7) | O-Mode belongs in the footer: out of the header | Out of the header; it and the Orioni switch became one button in the footer (#8) |
+| 23 (round 7) | Orioni mode as a button like "RSS feed" that works as a switch; its description in a tooltip | A button with the fountain pen, beside the RSS feed; `role="switch"`, filled in when on; the description in its tooltip (#8) |
+| 24 (round 7) | Rhyme Magazine's cover is cropped: keep its full dimensions, and tilt it slightly on hover | Covers keep their own proportions (no more cropping to a fixed box); on hover they lift and lean toward the pointer in 3D, gentler on the wide Weekly banner, still for reduced motion. The tooltip moved inside the footer landmark, which axe asked for while it was open (#8) |
 
 ## Playbook for the next Eurth site
 

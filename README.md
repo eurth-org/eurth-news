@@ -23,16 +23,16 @@ The page follows the **Eurth** design system (Claude Design): Libre Baskerville 
 
 A lead story without a photo gets a placeholder: the icon of its topic (conflict, diplomacy, politics, economy, health, science, culture or news, read from its headline and standfirst) over one of Eurth's own maps in the system's horizon disc. No people and no real places, so it suits whichever nation the story comes from.
 
-The header carries two controls:
+Two controls:
 
-- **O-Mode** (Font Awesome's fountain pen) turns on Orioni mode: warm newsprint parchment instead of white, in the spirit of the FT and De Tijd. Light theme only. The footer has the same as a switch, an O that rolls along its track, under the RSS feed.
-- **The theme switch**, after [Deluminator](https://github.com/stijn/deluminator) and [Governmint](https://gov.eurth.org/): auto follows the device, and each click moves on (from auto it flips the page, then keeps the device's look, then returns to auto). The mode is set before the page paints, and the new look grows out of the button in a circle (View Transitions). Its icons are [line-md](https://github.com/cyberalien/line-md)'s (MIT): the sun morphs into the moon and back, the rays turn and the stars twinkle.
+- **Orioni mode**, in the footer beside the RSS feed: a button that works as a switch (Font Awesome's fountain pen) and turns on warm newsprint parchment instead of white, in the spirit of the FT and De Tijd. Light theme only.
+- **The theme switch** in the header, after [Deluminator](https://github.com/stijn/deluminator) and [Governmint](https://gov.eurth.org/): auto follows the device, and each click moves on (from auto it flips the page, then keeps the device's look, then returns to auto). The mode is set before the page paints, and the new look grows out of the button in a circle (View Transitions). Its icons are [line-md](https://github.com/cyberalien/line-md)'s (MIT): the sun morphs into the moon and back, the rays turn and the stars twinkle.
 
 Each control explains itself in a tooltip that appears on hover and keyboard focus, stays while pointed at, and goes with Escape.
 
 Arrivals are small and play once: the masthead rule draws in, the lead settles, stories rise into place as they scroll in, Most read fills its meters, the clock runs to the second with its separators blinking as on a Mac. Nothing moves for visitors who ask for reduced motion.
 
-The footer has three columns: about the site, Eurth's other sites (forums, map, Governmint, uptime, The Newsroom, guidelines), and Eurth's periodicals, The Eurth Weekly and Rhyme Magazine, each with its latest issue.
+The footer has three columns: about the site, Eurth's other sites (forums, map, Governmint, uptime, The Newsroom, guidelines), and Eurth's periodicals, The Eurth Weekly and Rhyme Magazine, each with its latest issue. Their covers keep their own proportions and, on hover, lift and lean toward the pointer.
 
 ## Accessibility
 

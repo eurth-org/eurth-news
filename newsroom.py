@@ -756,12 +756,8 @@ THEME_BUTTON = tip_button("theme", "hdr-btn theme-btn", "Theme", "label",
                           "<span class='theme-icon' aria-hidden='true'></span>")
 ORIONI_TIP = ("Orioni mode: warm newsprint paper instead of white, like the FT or De Tijd, the way the Orioni press likes "
               "it. It colours the light theme only, so turning it on leaves dark mode.")
-O_MODE_BUTTON = tip_button("omode", "hdr-btn o-btn", "O-Mode", ORIONI_TIP, icon("pen-fancy") + "<span>O-Mode</span>",
-                           " aria-pressed='false'")
-PAPER_SWITCH = tip_button(
-    "paper", "o-switch", "Orioni mode", ORIONI_TIP,
-    "<span class='o-track' aria-hidden='true'><span class='o-knob'>O</span></span><span class='o-label'>Orioni mode</span>",
-    " role='switch' aria-checked='false'")
+PAPER_BUTTON = tip_button("paper", "btn paper-btn", "Orioni mode", ORIONI_TIP,
+                          icon("pen-fancy") + "<span>Orioni mode</span>", " role='switch' aria-checked='false'")
 
 SEARCH = ("<div class='search js-only' role='search'><label class='sr' for='q'>Search stories</label>"
           + icon("magnifying-glass", "search-i") +
@@ -877,24 +873,12 @@ abbr[title]{text-decoration:none}
 .hdr-btn:hover{background:var(--surface-raised)}
 .hdr-btn:active{transform:scale(.92)}
 .theme-icon,.theme-icon svg{display:block;width:22px;height:22px}
-/* O-Mode: the header's shortcut to Orioni mode, a fountain pen on newsprint when on */
-.o-btn{width:auto;gap:8px;padding:0 14px;font:700 13px/20px var(--sans)}
-.o-btn .i{width:15px;height:15px}
-.o-btn[aria-pressed=true]{background:var(--parchment);color:#222222;border-color:var(--ink)}
-/* Orioni mode: an O that rolls along its track */
-.o-switch{display:inline-flex;align-items:center;gap:12px;min-height:44px;margin:0;padding:0;border:0;background:transparent;
-  color:var(--ink);font:700 15px/20px var(--sans);cursor:pointer}
-.o-switch:hover .o-label{text-decoration:underline;text-underline-offset:3px}
-.foot-mode{margin-top:20px}
-.foot-about .o-note{font-size:14px;line-height:20px;margin:4px 0 0}
-.o-track{position:relative;display:block;width:54px;height:30px;border-radius:999px;border:1px solid var(--line-strong);
-  background:var(--surface-raised);transition:background-color .3s,border-color .3s}
-.o-knob{position:absolute;top:3px;left:3px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;
-  border-radius:50%;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font:700 13px/1 var(--serif);
-  transition:transform .55s cubic-bezier(.3,1.35,.5,1),background-color .3s,color .3s}
-.o-switch:hover .o-track{border-color:var(--ink)}
-.o-switch[aria-checked=true] .o-track{background:var(--parchment);border-color:var(--ink)}
-.o-switch[aria-checked=true] .o-knob{transform:translateX(24px) rotate(360deg);background:var(--ink);color:var(--parchment)}
+/* Orioni mode: a button like RSS feed that works as a switch; filled in, and its pen gives a flourish, when on */
+.foot-actions{display:flex;flex-wrap:wrap;gap:12px}
+.paper-btn[aria-checked=true],.paper-btn[aria-checked=true]:hover:not(:disabled){background:var(--ink);color:var(--surface);
+  border-color:var(--ink)}
+.paper-btn[aria-checked=true] .i{animation:flourish .6s var(--ease)}
+@keyframes flourish{30%{transform:rotate(-14deg) translateY(-2px)}65%{transform:rotate(8deg)}}
 .tip{position:fixed;z-index:7;max-width:min(300px,calc(100vw - 16px));margin:0;padding:8px 12px;font:14px/20px var(--sans);
   color:var(--surface);background:var(--ink);border-radius:var(--radius-sm)}
 .toast{position:fixed;left:50%;bottom:24px;z-index:6;max-width:calc(100vw - 32px);margin:0;padding:10px 16px;
@@ -1068,13 +1052,14 @@ html:not(.js) .bar{position:static}
   margin:0 -12px;text-decoration:none;border:1px solid transparent;border-radius:var(--radius-sm);
   transition:background-color .2s,border-color .2s}
 .papers a:hover{background:var(--surface-raised);border-color:var(--line-strong)}
-.cover{grid-row:1/span 4;display:block;width:84px;height:108px;overflow:hidden;background:var(--night);
-  border-radius:var(--radius-sm);transform:rotate(-2deg);transition:transform .4s var(--ease)}
-.cover img{display:block;width:100%;height:100%;object-fit:cover}
-.papers a:hover .cover{transform:rotate(0) scale(1.05)}
+/* Covers at their own proportions; on hover they tilt toward the pointer, lifted like paper off the page */
+.cover{grid-row:1/span 4;align-self:start;display:block;width:84px;overflow:hidden;border-radius:var(--radius-sm);
+  transform-origin:50% 60%;transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+.cover img{display:block;width:100%;height:auto}
+@media (prefers-reduced-motion:no-preference){.papers a:hover .cover{box-shadow:0 0 10px rgba(0,0,0,.2);
+  transform:perspective(600px) rotateX(var(--ty,0deg)) rotateY(var(--tx,0deg)) rotate(var(--turn,-3deg)) scale(var(--grow,1.06))}}
 .papers a.wide{grid-template-columns:minmax(0,1fr)}
-.papers a.wide .cover{grid-row:auto;width:100%;height:auto;max-width:360px;aspect-ratio:auto;transform:rotate(-1deg)}
-.papers a.wide .cover img{height:auto;object-fit:contain}
+.papers a.wide .cover{grid-row:auto;width:100%;max-width:360px;margin-bottom:6px;--turn:-1deg;--grow:1.02}
 .p-name{font:400 1.15em/1.3 var(--serif);color:var(--ink)}
 .papers a:hover .p-name{text-decoration:underline}
 .p-blurb{font-size:14px;line-height:20px;color:var(--ink-muted)}
@@ -1334,6 +1319,18 @@ BASE_SCRIPT = """
   }
   addEventListener("scroll", function () { if (tipFor) hideTip(true); }, { passive: true });
 
+  // Periodical covers lean toward the pointer.
+  $$(".papers a").forEach(function (a) {
+    var c = $(".cover", a), clamp = function (v) { return Math.max(-0.5, Math.min(0.5, v)); };
+    if (!c) return;
+    a.addEventListener("pointermove", function (e) {
+      var r = c.getBoundingClientRect();
+      c.style.setProperty("--tx", (clamp((e.clientX - r.left) / r.width - 0.5) * 18).toFixed(1) + "deg");
+      c.style.setProperty("--ty", (-clamp((e.clientY - r.top) / r.height - 0.5) * 14).toFixed(1) + "deg");
+    });
+    a.addEventListener("pointerleave", function () { c.style.removeProperty("--tx"); c.style.removeProperty("--ty"); });
+  });
+
   // Section bar: sticks to the top, brings in the globe and title once the masthead has scrolled away,
   // folds into a menu on phones.
   var bar = $("#bar"), menuBtn = $("#menu-btn"), mast = $(".masthead");
@@ -1352,7 +1349,7 @@ BASE_SCRIPT = """
   // Auto, light, dark and Orioni mode (after github.com/stijn/deluminator and gov.eurth.org). Auto follows the
   // device and is remembered by forgetting the choice; each click moves on: from auto it flips the page, then keeps
   // the device's look even if the device changes, then returns to auto. Open tabs keep in step.
-  var themeBtn = $("#theme"), paperBtns = $$("#paper, #omode"), chrome = $("#theme-color"),
+  var themeBtn = $("#theme"), paperBtn = $("#paper"), chrome = $("#theme-color"),
       toastEl = $("#toast"), sys = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
   var NAMES = { auto: "auto, as your device is set", light: "light, always", dark: "dark, always" };
   function isDark() { return root.getAttribute("data-theme") === "dark"; }
@@ -1374,7 +1371,7 @@ BASE_SCRIPT = """
     if (chrome) chrome.setAttribute("content", dark ? "@@DARK@@" : paper ? "@@PAPER@@" : "@@LIGHT@@");
     var m = mode(), label = "Theme: " + NAMES[m] + ". Switch to " + after(m) + ".";
     themeBtn.setAttribute("aria-label", label);
-    paperBtns.forEach(function (b) { b.setAttribute(b.id === "paper" ? "aria-checked" : "aria-pressed", String(paper && !dark)); });
+    if (paperBtn) paperBtn.setAttribute("aria-checked", String(paper && !dark));
     var name = m === "auto" ? "auto" : dark ? "moon" : "sun";
     var id = still() ? name + "-still" : m !== "auto" && how ? how : name;
     $(".theme-icon", themeBtn).replaceChildren(document.getElementById("i-" + id).content.cloneNode(true));
@@ -1409,15 +1406,13 @@ BASE_SCRIPT = """
     if (dark === isDark()) { paint(dark, isPaper()); return; }
     reveal(themeBtn, e, !dark, function () { paint(dark, isPaper(), dark ? "to-dark" : "to-light"); });
   });
-  // Orioni mode has two controls: the O-Mode button in the header and the switch in the footer.
-  paperBtns.forEach(function (btn) {
-    btn.addEventListener("click", function (e) {
-      var paper = !(isPaper() && !isDark()), wasDark = isDark();
-      save("enn:paper", paper ? "1" : "0");
-      if (paper && wasDark) save("enn:theme", "light");
-      toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
-      reveal(btn, e, paper, function () { paint(paper ? false : wasDark, paper, paper && wasDark ? "to-light" : ""); });
-    });
+  // Orioni mode, the footer's newsprint switch.
+  if (paperBtn) paperBtn.addEventListener("click", function (e) {
+    var paper = !(isPaper() && !isDark()), wasDark = isDark();
+    save("enn:paper", paper ? "1" : "0");
+    if (paper && wasDark) save("enn:theme", "light");
+    toast(paper ? "Orioni mode: newsprint paper." : "Orioni mode off.");
+    reveal(paperBtn, e, paper, function () { paint(paper ? false : wasDark, paper, paper && wasDark ? "to-light" : ""); });
   });
   if (sys && sys.addEventListener) sys.addEventListener("change", function (e) { if (mode() === "auto") paint(e.matches, isPaper()); });
   addEventListener("storage", function (e) {
@@ -1744,10 +1739,10 @@ def orb(base, size):
 
 
 def topbar(now, base=""):
-    """The globe and today's date (with the reader's local time once the script runs); O-Mode and the theme."""
+    """The globe and today's date (with the reader's local time once the script runs); the theme switch."""
     return (f"<div class='topbar'><div><a class='tap orb-link' href='{SITE}' aria-label='eurth.org'>{orb(base, 32)}</a>"
             f"<time id='clock' datetime='{now.isoformat(timespec='seconds')}'>{now:%A} {now.day} {now:%b %Y}</time></div>"
-            f"<div class='controls'>{O_MODE_BUTTON}{THEME_BUTTON}</div></div>")
+            f"<div class='controls'>{THEME_BUTTON}</div></div>")
 
 
 def bar(base="", search=""):
@@ -1795,7 +1790,8 @@ def footer(papers, base=""):
     issues = ""
     for p in papers:
         im = p["image"]
-        cover = (f"<img src='{esc(im['src'])}' alt='' loading='lazy' decoding='async' referrerpolicy='no-referrer'>"
+        size = f" width='{im['w']}' height='{im['h']}'" if im and im["w"] and im["h"] else ""
+        cover = (f"<img src='{esc(im['src'])}'{size} alt='' loading='lazy' decoding='async' referrerpolicy='no-referrer'>"
                  if im else orb(base, 84))
         latest = (f"<span class='p-issue'>Latest: {esc(p['issue'])}" + (f" · {esc(fmt_date(p['date']))}" if p["date"] else "")
                   + "</span>") if p["issue"] else ""
@@ -1808,9 +1804,8 @@ def footer(papers, base=""):
             f"<h2 class='foot-title' id='f-about'>Eurth News Network</h2>"
             f"<p>The newest stories from The Newsroom on eurth.org, side by side. Everything here is fiction, written by the "
             f"members of Eurth, the Worldbuilding &amp; Roleplay Writing Community; each story appears as its agency "
-            f"published it.</p><a class='btn' href='{base}news.rss'>{icon('rss')}RSS feed</a>"
-            f"<div class='foot-mode js-only'>{PAPER_SWITCH}<p class='o-note'>Newsprint paper, the way the Orioni press "
-            f"likes it.</p></div></section>"
+            f"published it.</p><div class='foot-actions'><a class='btn' href='{base}news.rss'>{icon('rss')}RSS feed</a>"
+            f"{PAPER_BUTTON}</div></section>"
             f"<nav class='foot-col' aria-labelledby='f-eurth'><h2 class='col-h' id='f-eurth'>{icon('globe')}Eurth</h2>"
             f"<ul class='foot-links'>{links}</ul></nav>"
             f"<section class='foot-col foot-papers' aria-labelledby='f-papers'>"
@@ -1821,12 +1816,13 @@ def footer(papers, base=""):
             f"<p>Members sometimes put images and other material from other websites in their stories, linked or copied. "
             f"Eurth doesn't own or check that material and isn't responsible for it; its rights stay with whoever holds them. "
             f"If something of yours appears here without your permission, flag the original post on eurth.org; once it comes "
-            f"down there, it's gone from here at the next update.</p></div></footer>")
+            f"down there, it's gone from here at the next update.</p></div>"
+            f"<div class='tip' id='tip' role='tooltip' hidden></div></footer>")
 
 
 def chrome_bits():
-    """What every page carries once: the icon sprite, the tooltip, the toast and the theme icons."""
-    return f"<div class='tip' id='tip' role='tooltip' hidden></div><p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
+    """What every page carries once: the toast and the theme icons (the tooltip lives in the footer, inside a landmark)."""
+    return f"<p class='toast' id='toast' role='status'></p>{THEME_ICONS}"
 
 
 def build_html(items, papers):
