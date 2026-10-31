@@ -8,7 +8,7 @@ Eurth News Network is the front page of The Newsroom on eurth.org: the newest st
 2. **A real front page.** Lead story, "Also new", a grid in reading order, Most read, a nation filter and full-text search, with a reader that opens stories in place.
 3. **Eurth's look.** Built from the Eurth design system: Libre Baskerville, Helvetica, JetBrains Mono, the turning globe, Font Awesome, the forum's light and Solarized night themes, and Orioni mode's newsprint.
 4. **Accessible to WCAG 2.2 AAA**, checked with axe-core in every look, with one named brand exception.
-5. **Made to be shared.** Every story has its own page, social card and oEmbed response, plus an RSS feed.
+5. **Made to be shared.** Every story has its own page, social card and oEmbed response, plus an RSS feed and a news sitemap.
 
 ## Phases
 
@@ -36,7 +36,8 @@ Times in CET.
 | #5 Feedback round 4 (`29701a5`) | 29 Oct 2026, 23:20 | 11: disclaimer for images members take from other websites |
 | #6 Feedback round 5 (`9cee418`) | 29 Oct 2026, 23:52 | 12–22: line-md icons, Orioni switch in the header, Pause motion, placeholder images, icons, footer columns with periodicals, spinning favicon, smooth scrolling, this roadmap |
 | #7 Feedback round 6 (`6d4eb2d`) | 30 Oct 2026, 02:13 | 20–21 (round 6): Pause motion taken out; the Orioni switch to the footer, an O-Mode button in the header |
-| #8 Feedback round 7 | 30 Oct 2026 | 22–24 (round 7): O-Mode out of the header; Orioni mode a button in the footer that works as a switch; periodical covers uncropped, tilting on hover |
+| #8 Feedback round 7 (`e3475bd`) | 30 Oct 2026, 02:38 | 22–24 (round 7): O-Mode out of the header; Orioni mode a button in the footer that works as a switch; periodical covers uncropped, tilting on hover |
+| #9 Feedback round 8 | 30 Oct 2026 | 25: a news sitemap, validated on every build, and robots.txt |
 
 ## What's in so far
 
@@ -76,7 +77,8 @@ The update that added each item is in brackets.
 
 **Sharing and rights**
 - Story pages, Open Graph and X cards, a 1200 x 800 share card, oEmbed, RSS with headlines (#1).
-- © Eurth, all rights reserved, with a text-and-data-mining reservation; stories © their authors; borrowed images disclaimed, with a takedown route (#4, #5).
+- © Eurth, all rights reserved, with a text-and-data-mining reservation; stories © their authors; borrowed images disclaimed, with a takedown route (#4, #5); the same reservation as content signals in robots.txt (#9).
+- `sitemap.xml` with Google News tags on stories from the last two days, checked against the sitemaps.org and Google News schemas on every build; robots.txt points to it (#9).
 
 ## Feedback log
 
@@ -121,6 +123,7 @@ Every request, in the order it was made, and the update that did it.
 | 22 (round 7) | O-Mode belongs in the footer: out of the header | Out of the header; it and the Orioni switch became one button in the footer (#8) |
 | 23 (round 7) | Orioni mode as a button like "RSS feed" that works as a switch; its description in a tooltip | A button with the fountain pen, beside the RSS feed; `role="switch"`, filled in when on; the description in its tooltip (#8) |
 | 24 (round 7) | Rhyme Magazine's cover is cropped: keep its full dimensions, and tilt it slightly on hover | Covers keep their own proportions (no more cropping to a fixed box); on hover they lift and lean toward the pointer in 3D, gentler on the wide Weekly banner, still for reduced motion. The tooltip moved inside the footer landmark, which axe asked for while it was open (#8) |
+| 25 (round 8) | A news sitemap.xml, validated, after Google's news sitemap guide | `sitemap.xml`: the front page and every story page; stories from the last two days also carry `news:news` (publication, language, first publication time, title), as Google asks, so the file is never empty. Valid against the sitemaps.org and Google News XSDs, here and on today's live data; three broken copies were rejected. Every build validates it again (a failure is flagged without holding back the news). A new `robots.txt` names it; Cloudflare's content-signal notice stays on top (#9) |
 
 ## Playbook for the next Eurth site
 
@@ -132,16 +135,18 @@ What this site settled, to reuse from the first day:
 4. **Respect reduced motion**: nothing moves for it. A Pause motion switch would meet WCAG 2.2.2 for everyone; it was tried in #6 and taken out in #7, as nobody had asked for it.
 5. **Tooltips** that show on hover and focus, stay while pointed at, and go with Escape.
 6. **Link previews**: Open Graph and X tags, a 1200 x 800 ShareCard, oEmbed JSON.
-7. **The footer**: what the site is, Eurth's other sites, the periodicals, copyright and the third-party disclaimer.
-8. **Rights**: "© Eurth. All rights reserved", a text-and-data-mining reservation (meta tag and `/.well-known/tdmrep.json`), members' work stays theirs.
-9. **The turning globe** as favicon, Apple touch icon from the system.
-10. **Check the live site** after every deploy.
+7. **Discovery**: a sitemap with Google News tags on the last two days' articles, validated against the official schemas in CI, and a robots.txt that names it.
+8. **The footer**: what the site is, Eurth's other sites, the periodicals, copyright and the third-party disclaimer.
+9. **Rights**: "© Eurth. All rights reserved", a text-and-data-mining reservation (meta tag and `/.well-known/tdmrep.json`), members' work stays theirs.
+10. **The turning globe** as favicon, Apple touch icon from the system.
+11. **Check the live site** after every deploy.
 
 ## Ideas
 
 Not planned yet, but worth keeping:
 
 - Switch on the comments once eurth.org allows news.eurth.org under Admin › Embedding.
+- Submit `sitemap.xml` in Google Search Console (needs the domain verified there); to appear in Google News itself, the site would also need a Publisher Center entry named "Eurth News Network".
 - An AAA version of the call to action: white on `eurth-blue-deep` (#1b6fa0) is 5.5:1.
 - A quiet way to stop the turning globe and the seconds, to meet WCAG 2.2.2 for everyone again.
 - Decide whether to keep loading images with `no-referrer`, which also gets around other websites' hotlink protection.

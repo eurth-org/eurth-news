@@ -340,6 +340,7 @@ def fetch_stories():
             "avatar":  avatar_url(detail.get("avatar_template") or p.get("avatar_template")),
             "readers": detail.get("readers_count") or 0,
             "date":    detail.get("created_at") or p.get("created_at", ""),
+            "updated": detail.get("updated_at") or "",
             "cooked":  cooked,
             "url":     f"{SITE}/t/{slug}/{tid}/{p.get('post_number')}",
         })
@@ -391,6 +392,44 @@ def build_rss(items):
         ]
     lines += ["</channel></rss>"]
     return "\n".join(lines)
+
+
+def w3c_date(dt):
+    return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def build_sitemap(items):
+    """Sitemap with Google News tags: every page is listed, but only stories from the last two days carry
+    news:news, as Google asks; older ones keep their URL without it."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    fresh = now - datetime.timedelta(days=2)
+    newest = max((parse_date(s["date"]) for s in items), default=now)
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">',
+        f"<url><loc>{PAGE_URL}</loc><lastmod>{w3c_date(newest)}</lastmod></url>",
+    ]
+    for s in items:
+        made = parse_date(s["date"])
+        news = ("<news:news><news:publication><news:name>Eurth News Network</news:name>"
+                "<news:language>en</news:language></news:publication>"
+                f"<news:publication_date>{w3c_date(made)}</news:publication_date>"
+                f"<news:title>{escape(s['headline'])}</news:title></news:news>") if made >= fresh else ""
+        lines.append(f"<url><loc>{escape(PAGE_URL + page_path(s))}</loc>"
+                     f"<lastmod>{w3c_date(parse_date(s['updated'] or s['date']))}</lastmod>{news}</url>")
+    lines.append("</urlset>")
+    return "\n".join(lines)
+
+
+# Cloudflare puts its managed content-signal notice above this. The signals repeat the site's rights
+# reservation (LICENSE, the tdm-reservation meta and /.well-known/tdmrep.json) for crawlers.
+ROBOTS = f"""User-agent: *
+Content-Signal: search=yes, ai-input=no, ai-train=no
+Allow: /
+
+Sitemap: {PAGE_URL}sitemap.xml
+"""
 
 
 # --- Pages -------------------------------------------------------------------
@@ -2014,6 +2053,8 @@ def main():
         write(page + "index.html", build_story(items, i, papers))
         write(page + "oembed.json", oembed(s["headline"], story_image(s), (s["nation"], f"{SITE}/u/{s['author']}")))
     write(f"{OUTDIR}/news.rss", build_rss(items))
+    write(f"{OUTDIR}/sitemap.xml", build_sitemap(items))
+    write(f"{OUTDIR}/robots.txt", ROBOTS)
     write(f"{OUTDIR}/.well-known/tdmrep.json", json.dumps([{"location": "/", "tdm-reservation": 1}]))
     print(f"Updated {len(items)} stories -> {OUTDIR}/")
 

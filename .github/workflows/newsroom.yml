@@ -28,6 +28,22 @@ jobs:
           DISCOURSE_API_KEY: ${{ secrets.DISCOURSE_API_KEY }}
           EMBED_COMMENTS: ${{ vars.EMBED_COMMENTS }}
         run: python newsroom.py
+      # Checks sitemap.xml against the sitemaps.org and Google News schemas. A failure is flagged on the run
+      # but doesn't hold back the news; if the schemas can't be fetched, the check is skipped with a warning.
+      - name: Validate sitemap
+        continue-on-error: true
+        run: |
+          xsd="$RUNNER_TEMP/xsd" && mkdir -p "$xsd"
+          if ! curl -sSfL --retry 2 -o "$xsd/sitemap.xsd" https://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd ||
+             ! curl -sSfL --retry 2 -o "$xsd/sitemap-news.xsd" https://www.google.com/schemas/sitemap-news/0.9/sitemap-news.xsd; then
+            echo "::warning::Sitemap schemas unavailable; sitemap.xml not validated"; exit 0
+          fi
+          printf '%s\n' '<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">' \
+            '<xsd:import namespace="http://www.sitemaps.org/schemas/sitemap/0.9" schemaLocation="sitemap.xsd"/>' \
+            '<xsd:import namespace="http://www.google.com/schemas/sitemap-news/0.9" schemaLocation="sitemap-news.xsd"/>' \
+            '</xsd:schema>' > "$xsd/both.xsd"
+          command -v xmllint > /dev/null || sudo apt-get install -y -qq libxml2-utils
+          xmllint --noout --schema "$xsd/both.xsd" _site/sitemap.xml || { echo "::error::sitemap.xml is not valid"; exit 1; }
       - uses: actions/upload-pages-artifact@v3
         with:
           path: "_site"

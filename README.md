@@ -14,8 +14,10 @@ RSS feed:  https://news.eurth.org/news.rss
   - `story/<post id>/index.html`: one page per story, readable without JavaScript, with its own social card.
   - `oembed.json` next to every page, advertised with `<link rel="alternate" type="application/json+oembed">`, plus Open Graph and X card tags, so links unfurl on Discourse, Discord, Slack, Bluesky, Mastodon and X.
   - `news.rss`: an RSS 2.0 feed with real headlines and the full story content.
+  - `sitemap.xml`: the front page and every story page, with [Google News tags](https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap) on stories from the last two days (Google's limit; older stories stay listed without them).
+  - `robots.txt`: names the sitemap and repeats the rights reservation as content signals (search yes, AI input and training no). Cloudflare puts its managed content-signal notice above it.
   - `static/`: copied from the repo (the globe as a 240-frame sprite strip and its first frame as favicon, Apple touch icon, share card, and three of Eurth's maps for stories without a photo).
-- The GitHub Actions workflow (`.github/workflows/newsroom.yml`) runs the script every 2 hours, on every push to `main`, and on demand, and deploys `_site/` to GitHub Pages.
+- The GitHub Actions workflow (`.github/workflows/newsroom.yml`) runs the script every 2 hours, on every push to `main`, and on demand, checks `sitemap.xml` against the sitemaps.org and Google News schemas (a failure is flagged on the run without holding back the update), and deploys `_site/` to GitHub Pages.
 
 ## Design
 
