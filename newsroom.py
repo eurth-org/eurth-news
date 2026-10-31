@@ -812,6 +812,16 @@ OWNER, SINCE = "Eurth", 2026
 YEARS = str(SINCE) if datetime.date.today().year <= SINCE else f"{SINCE}–{datetime.date.today().year}"
 RIGHTS = f"© {YEARS} {OWNER}. All rights reserved."
 
+# Structured data (schema.org JSON-LD) for search engines: the site's name on the front page, and who wrote
+# each story and when on its own page. Google reads WebSite for the site name and NewsArticle for news.
+PUBLISHER = {"@type": "NewsMediaOrganization", "name": "Eurth News Network", "url": PAGE_URL,
+             "logo": {"@type": "ImageObject", "url": f"{PAGE_URL}static/apple-touch-icon.png", "width": 180,
+                      "height": 180},
+             "parentOrganization": {"@type": "Organization", "name": OWNER, "url": f"{SITE}/"}}
+WEBSITE = {"@context": "https://schema.org", "@type": "WebSite", "name": "Eurth News Network", "url": PAGE_URL,
+           "description": DESCRIPTION, "inLanguage": "en", "publisher": PUBLISHER,
+           "copyrightHolder": PUBLISHER["parentOrganization"], "copyrightYear": SINCE}
+
 FOOTER_NAV = [  # (name, where it lives, link, icon)
     ("Forums", "eurth.org", f"{SITE}/", "comments"),
     ("Map", "map.eurth.org", "https://map.eurth.org/", "map"),
@@ -1772,6 +1782,34 @@ def oembed(title, image, author=None):
     return json.dumps(data, ensure_ascii=False)
 
 
+def ld_json(data):
+    """A JSON-LD script element; '<' is escaped so nothing in a headline can close the element."""
+    return ("<script type='application/ld+json'>"
+            + json.dumps(data, ensure_ascii=False).replace("<", "\\u003c") + "</script>")
+
+
+def article(s, url):
+    """NewsArticle for a story page. The photo goes in only when it's the story's own and big enough for
+    Google (50,000 pixels); a story without one gets no image rather than the generic share card."""
+    made = parse_date(s["date"])
+    author = ({"@type": "Organization", "name": OWNER, "url": f"{SITE}/"} if s["author"] == "system" else
+              {"@type": "Person", "name": s["nation"], "url": f"{SITE}/u/{s['author']}"})
+    data = {"@context": "https://schema.org", "@type": "NewsArticle", "headline": s["headline"], "url": url,
+            "mainEntityOfPage": url, "datePublished": w3c_date(made),
+            "dateModified": w3c_date(parse_date(s["updated"] or s["date"])), "author": author,
+            "sourceOrganization": {"@type": "NewsMediaOrganization", "name": s["agency"]},
+            "publisher": PUBLISHER, "copyrightHolder": author, "copyrightYear": made.year,
+            "genre": "Fiction", "inLanguage": "en", "isAccessibleForFree": True}
+    if s["dek"]:
+        data["description"] = s["dek"]
+    if s["label"]:
+        data["articleSection"] = s["label"]
+    im = s["image"]
+    if im and not (im["w"] and im["h"] and im["w"] * im["h"] < 50000):
+        data["image"] = [im["src"]]
+    return data
+
+
 def orb(base, size):
     return (f"<span class='orb' aria-hidden='true' style='--s:{size}px;"
             f"background-image:url({base}static/eurth-globe-sprite.png)'></span>")
@@ -1919,7 +1957,8 @@ def build_html(items, papers):
     return (
         f"<!doctype html><html lang='en'>"
         + head("Eurth News Network", "Eurth News Network", DESCRIPTION, PAGE_URL, SHARE_CARD, "",
-               "<meta property='og:type' content='website'><meta name='referrer' content='no-referrer'>")
+               "<meta property='og:type' content='website'><meta name='referrer' content='no-referrer'>"
+               + ld_json(WEBSITE))
         + f"<body>{SPRITE}<a class='skip' href='#main'>Skip to stories</a>"
         f"<div class='paper'>"
         f"  <header>{topbar(now)}"
@@ -1992,7 +2031,8 @@ def build_story(items, i, papers):
     description = s["dek"] or f"A story from {s['agency']}, published in The Newsroom on eurth.org."
     extra = (f"<meta property='og:type' content='article'>"
              f"<meta property='article:published_time' content='{esc(s['date'])}'>"
-             f"<meta property='article:section' content='{esc(short_agency(s['agency']))}'>")
+             f"<meta property='article:section' content='{esc(short_agency(s['agency']))}'>"
+             + ld_json(article(s, url)))
     if EMBED_COMMENTS and s["author"] != "system":
         extra += f"<meta name='discourse-username' content='{esc(s['author'])}'>"
 
