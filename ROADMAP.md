@@ -38,7 +38,8 @@ Times in CET.
 | #7 Feedback round 6 (`6d4eb2d`) | 30 Oct 2026, 02:13 | 20–21 (round 6): Pause motion taken out; the Orioni switch to the footer, an O-Mode button in the header |
 | #8 Feedback round 7 (`e3475bd`) | 30 Oct 2026, 02:38 | 22–24 (round 7): O-Mode out of the header; Orioni mode a button in the footer that works as a switch; periodical covers uncropped, tilting on hover |
 | #9 Feedback round 8 (`bc01971`) | 31 Oct 2026, 22:18 | 25: a news sitemap, validated on every build, and robots.txt |
-| #10 Feedback round 9 | 31 Oct 2026 | 25.1: structured data, the site's name and every story as a news article |
+| #10 Feedback round 9 (`a57adf0`) | 31 Oct 2026, 22:55 | 25.1: structured data, the site's name and every story as a news article |
+| #11 Feedback round 10 | 31 Oct 2026 | 25.2: topic images for stories without a photo, in link previews and structured data |
 
 ## What's in so far
 
@@ -53,7 +54,7 @@ The update that added each item is in brackets.
 - Top stories (the lead and "Also new"), More stories in reading order, Most read with reader meters, nations in this edition as a filter, full-text search (#1; meters #3; headings #6).
 - A sticky section bar with search and a menu button on phones; the globe and title appear once the masthead scrolls away; links glide to their section (#2; globe #3; smooth scrolling #6).
 - The reader: the story in place, newer and older, deep links, copy link, "New" and "Read" markers (#1; icons on every button #6).
-- A lead story without a photo gets its topic's icon over one of Eurth's maps (#6).
+- A lead story without a photo gets its topic's icon over one of Eurth's maps (#6); the same picture, as images, stands in for a missing photo in link previews and search results (#11).
 - The edition line: stories, agencies, nations, when it was updated, the RSS feed (#1; moved from the top bar #6).
 
 **Look**
@@ -127,6 +128,7 @@ Every request, in the order it was made, and the update that did it.
 | 24 (round 7) | Rhyme Magazine's cover is cropped: keep its full dimensions, and tilt it slightly on hover | Covers keep their own proportions (no more cropping to a fixed box); on hover they lift and lean toward the pointer in 3D, gentler on the wide Weekly banner, still for reduced motion. The tooltip moved inside the footer landmark, which axe asked for while it was open (#8) |
 | 25 (round 8) | A news sitemap.xml, validated, after Google's news sitemap guide | `sitemap.xml`: the front page and every story page; stories from the last two days also carry `news:news` (publication, language, first publication time, title), as Google asks, so the file is never empty. Valid against the sitemaps.org and Google News XSDs, here and on today's live data; three broken copies were rejected. Every build validates it again (a failure is flagged without holding back the news). A new `robots.txt` names it; Cloudflare's content-signal notice stays on top (#9) |
 | 25.1 (round 9) | Where to sign up for Google News, too? Then: yes, add the structured data | No sign-up exists since April 2024; Google adds eligible sites itself. Added schema.org JSON-LD: `WebSite` on the front page, so Google takes "Eurth News Network" as the site's name; `NewsArticle` on each story page with headline, first publication and edit times, the nation as author (Eurth for its own posts), the agency, Eurth News Network as publisher, the story's own photo when it's big enough (no stock card), the author as copyright holder, and genre Fiction. All 26 pages pass the schema.org validator with no errors or warnings; a broken copy was caught (#10) |
+| 25.2 (round 10) | Yes, draw an image for each story without a photo (Google's test noted a missing image) | The lead placeholder, the topic's icon over its Eurth map, drawn as images: 8 topics in Google's three shapes (16:9, 4:3, 1:1, 1200 px wide, 45–92 KB each), rendered by headless Chrome from the site's own icons and maps (`tools/topic_images.py`). A story without a photo, or with one under 50,000 pixels, now uses them: all three in its structured data, the 16:9 one with alt text for its link previews and oEmbed, instead of the generic share card. In today's edition that's 10 of 25 stories (#11) |
 
 ## Playbook for the next Eurth site
 
@@ -138,7 +140,7 @@ What this site settled, to reuse from the first day:
 4. **Respect reduced motion**: nothing moves for it. A Pause motion switch would meet WCAG 2.2.2 for everyone; it was tried in #6 and taken out in #7, as nobody had asked for it.
 5. **Tooltips** that show on hover and focus, stay while pointed at, and go with Escape.
 6. **Link previews**: Open Graph and X tags, a 1200 x 800 ShareCard, oEmbed JSON.
-7. **Discovery**: a sitemap with Google News tags on the last two days' articles, validated against the official schemas in CI, a robots.txt that names it, and schema.org structured data (`WebSite` on the home page, `NewsArticle` on each article). Then add the domain to Search Console and submit the sitemap; there is no Google News sign-up.
+7. **Discovery**: a sitemap with Google News tags on the last two days' articles, validated against the official schemas in CI, a robots.txt that names it, and schema.org structured data (`WebSite` on the home page, `NewsArticle` on each article, with a topic image in 16:9, 4:3 and 1:1 when there's no photo). Then add the domain to Search Console and submit the sitemap; there is no Google News sign-up.
 8. **The footer**: what the site is, Eurth's other sites, the periodicals, copyright and the third-party disclaimer.
 9. **Rights**: "© Eurth. All rights reserved", a text-and-data-mining reservation (meta tag and `/.well-known/tdmrep.json`), members' work stays theirs.
 10. **The turning globe** as favicon, Apple touch icon from the system.
@@ -153,6 +155,6 @@ Not planned yet, but worth keeping:
 - An AAA version of the call to action: white on `eurth-blue-deep` (#1b6fa0) is 5.5:1.
 - A quiet way to stop the turning globe and the seconds, to meet WCAG 2.2.2 for everyone again.
 - Decide whether to keep loading images with `no-referrer`, which also gets around other websites' hotlink protection.
-- Share cards drawn per story when there's no photo.
+- Share cards that carry the story's own headline, not just its topic (needs fonts and Pillow in the build).
 - An archive beyond the newest 25, and pages per agency and per nation.
 - The GitHub repository's description still says "every 5 minutes".

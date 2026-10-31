@@ -859,6 +859,10 @@ TOPICS = [  # (topic, icon, map, words), the topic with the most matching words 
      r"festival\w*|music\w*|films?|magazines?|arts?|sports?|cultur\w*|museums?|awards?|church\w*|religio\w*|royal"),
 ]
 
+# The same placeholder as images, in Google's three recommended shapes, for search engines and link previews:
+# static/topic-<topic>-<shape>.jpg, drawn by tools/topic_images.py.
+TOPIC_SHAPES = {"16x9": (1200, 675), "4x3": (1200, 900), "1x1": (1200, 1200)}
+
 # Theme surfaces for the browser's own chrome (address bar), set before the page paints.
 CHROME = {"light": "#ffffff", "paper": "#fcf6e1", "dark": "#002b36"}
 
@@ -1728,9 +1732,24 @@ def plural(n, word):
     return f"{n} {word}" if n == 1 else f"{n} {word[:-1] + 'ies' if word.endswith('y') else word + 's'}"
 
 
-def story_image(s):
+def photo(s):
+    """The story's own photo, if it's big enough to stand for the story (Google asks for 50,000 pixels)."""
     im = s["image"]
-    return (im["src"], im["w"], im["h"], "") if im else SHARE_CARD
+    return im if im and not (im["w"] and im["h"] and im["w"] * im["h"] < 50000) else None
+
+
+def topic_images(s):
+    """The story's topic image in each of TOPIC_SHAPES, as (url, width, height), widest first."""
+    name = topic(s)[0]
+    return [(f"{PAGE_URL}static/topic-{name.lower()}-{shape}.jpg", w, h) for shape, (w, h) in TOPIC_SHAPES.items()]
+
+
+def story_image(s):
+    """The image for a story's link previews: its photo or, without a usable one, its topic image."""
+    im = photo(s)
+    if im:
+        return im["src"], im["w"], im["h"], ""
+    return (*topic_images(s)[0], f"{topic(s)[0]}, over a map of Eurth")
 
 
 def head(title, card_title, description, url, image, base, extra=""):
@@ -1789,8 +1808,8 @@ def ld_json(data):
 
 
 def article(s, url):
-    """NewsArticle for a story page. The photo goes in only when it's the story's own and big enough for
-    Google (50,000 pixels); a story without one gets no image rather than the generic share card."""
+    """NewsArticle for a story page, with the story's photo or, without a usable one, its topic image in
+    Google's three shapes (never the generic share card)."""
     made = parse_date(s["date"])
     author = ({"@type": "Organization", "name": OWNER, "url": f"{SITE}/"} if s["author"] == "system" else
               {"@type": "Person", "name": s["nation"], "url": f"{SITE}/u/{s['author']}"})
@@ -1804,9 +1823,8 @@ def article(s, url):
         data["description"] = s["dek"]
     if s["label"]:
         data["articleSection"] = s["label"]
-    im = s["image"]
-    if im and not (im["w"] and im["h"] and im["w"] * im["h"] < 50000):
-        data["image"] = [im["src"]]
+    im = photo(s)
+    data["image"] = [im["src"]] if im else [src for src, _, _ in topic_images(s)]
     return data
 
 

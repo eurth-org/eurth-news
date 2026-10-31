@@ -17,14 +17,14 @@ RSS feed:  https://news.eurth.org/news.rss
   - `sitemap.xml`: the front page and every story page, with [Google News tags](https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap) on stories from the last two days (Google's limit; older stories stay listed without them).
   - Structured data (schema.org JSON-LD) for search engines: `WebSite` on the front page with the site's name, and `NewsArticle` on each story page with its headline, publication and edit times, author (the nation), agency, publisher, photo and copyright holder. Each story is marked as fiction.
   - `robots.txt`: names the sitemap and repeats the rights reservation as content signals (search yes, AI input and training no). Cloudflare puts its managed content-signal notice above it.
-  - `static/`: copied from the repo (the globe as a 240-frame sprite strip and its first frame as favicon, Apple touch icon, share card, and three of Eurth's maps for stories without a photo).
+  - `static/`: copied from the repo (the globe as a 240-frame sprite strip and its first frame as favicon, Apple touch icon, share card, three of Eurth's maps for stories without a photo, and their topic images).
 - The GitHub Actions workflow (`.github/workflows/newsroom.yml`) runs the script every 2 hours, on every push to `main`, and on demand, checks `sitemap.xml` against the sitemaps.org and Google News schemas (a failure is flagged on the run without holding back the update), and deploys `_site/` to GitHub Pages.
 
 ## Design
 
 The page follows the **Eurth** design system (Claude Design): Libre Baskerville for headlines, Helvetica for labels and text, JetBrains Mono for dates, [Font Awesome](https://fontawesome.com) icons (the forum's set, CC BY 4.0) in the menu, section headings, buttons and footer, and the forum's globe, turning in the corner, beside the sticky title, in the footer and as the favicon (as on gov.eurth.org). The page frame is Eurth's own (out of character); the stories inside keep their agencies' words but not their banners or colours, and the Eurth logo never sits on a story. Navigation stays on the site and scrolls smoothly; links to eurth.org are in the reader, on story pages and in the footer. `static/share-card.jpg` is the system's 1200 x 800 ShareCard layout with the satellite map of Eurth.
 
-A lead story without a photo gets a placeholder: the icon of its topic (conflict, diplomacy, politics, economy, health, science, culture or news, read from its headline and standfirst) over one of Eurth's own maps in the system's horizon disc. No people and no real places, so it suits whichever nation the story comes from.
+A lead story without a photo gets a placeholder: the icon of its topic (conflict, diplomacy, politics, economy, health, science, culture or news, read from its headline and standfirst) over one of Eurth's own maps in the system's horizon disc. No people and no real places, so it suits whichever nation the story comes from. The same picture, saved per topic in Google's three recommended shapes (16:9, 4:3 and 1:1, 1200 px wide, `static/topic-<topic>-<shape>.jpg`), stands in for the photo of any story without a usable one (none, or under 50,000 pixels) in its link previews and structured data. `tools/topic_images.py` draws them with headless Chrome from the site's own icons, maps and colours; run it again after changing the topics.
 
 Two controls:
 
@@ -57,6 +57,7 @@ How the site got here, request by request, is in [ROADMAP.md](ROADMAP.md).
 python3 -m py_compile newsroom.py   # sanity check
 python3 newsroom.py                 # generates _site/
 python3 -m http.server -d _site     # then open http://localhost:8000
+python3 tools/topic_images.py      # redraws static/topic-*.jpg (needs Google Chrome and Pillow)
 ```
 
 ## Configuration
